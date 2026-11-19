@@ -1,0 +1,14 @@
+{
+  "name": "锦鲤紫 · 2026 规划本",
+  "short_name": "锦鲤紫规划",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#faf7fc",
+  "theme_color": "#7b5fb5",
+  "description": "基于 ElenaLin Planner 2026 的生活规划与 AI 复盘工具",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "./icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}
