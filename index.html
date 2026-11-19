@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="锦鲤紫规划">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#7b5fb5">
+<title>锦鲤紫 · 2026 规划本</title>
+<style>
+:root{
+  --bg:#faf7fc; --card:#ffffff; --ink:#3a2e4a; --ink2:#7a6b8f;
+  --pri:#9b7ec8; --pri2:#7b5fb5; --pri-d:#5d4391;
+  --lav:#f0e8fa; --lav2:#e6dbf5; --line:#e8dff2;
+  --ok:#7fb98a; --warn:#e0a458; --bad:#d97a7a;
+  --shadow:0 4px 18px rgba(123,95,181,.10);
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+/* header */
+header{position:sticky;top:0;z-index:50;background:linear-gradient(120deg,var(--pri2),var(--pri));color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)}
+header h1{font-size:18px;font-weight:700;letter-spacing:1px}
+header .koi{font-size:22px}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+nav button{background:rgba(255,255,255,.16);border:none;color:#fff;padding:8px 13px;border-radius:20px;font-size:13px;cursor:pointer;transition:.2s}
+nav button.active,nav button:hover{background:#fff;color:var(--pri-d);font-weight:600}
+main{max-width:980px;margin:0 auto;padding:18px 14px 90px}
+.page{display:none}
+.page.on{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+h2{font-size:20px;color:var(--pri-d);margin:6px 0 14px}
+h3{font-size:15px;color:var(--pri-d);margin:0 0 8px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;border:1px solid var(--line)}
+.card h3{display:flex;align-items:center;gap:8px}
+.hint{font-size:12px;color:var(--ink2);margin-top:6px;line-height:1.6}
+textarea,input[type=text],input[type=password],input[type=date],input[type=time],select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;background:#fdfbff;color:var(--ink);outline:none;transition:.2s}
+textarea:focus,input:focus{border-color:var(--pri)}
+textarea{resize:vertical;min-height:70px;line-height:1.7}
+button.btn{background:var(--pri);border:none;color:#fff;padding:10px 18px;border-radius:22px;font-size:14px;cursor:pointer;transition:.2s;font-family:inherit}
+button.btn:hover{background:var(--pri2)}
+button.btn.ghost{background:var(--lav);color:var(--pri-d)}
+button.btn.sm{padding:6px 12px;font-size:12px;border-radius:16px}
+button.btn.danger{background:#f3e3e3;color:#a04a4a}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+@media(max-width:700px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;padding-bottom:2px}
+  nav button{white-space:nowrap;flex:0 0 auto;padding:9px 15px;font-size:15px}
+  textarea,input[type=text],input[type=password],input[type=date],input[type=time],select{font-size:16px}/* 防止 iOS 聚焦自动放大 */
+  main{padding-bottom:70px}
+  footer{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+}
+label.f{display:block;font-size:12px;color:var(--ink2);margin:10px 0 4px}
+/* goals */
+.goal-area{border-left:4px solid var(--pri);padding-left:12px;margin-bottom:14px}
+.badge{display:inline-block;background:var(--lav);color:var(--pri-d);border-radius:12px;padding:2px 10px;font-size:12px;margin-right:6px}
+/* checklist */
+.ck-item{display:flex;align-items:flex-start;gap:10px;padding:8px 4px;border-bottom:1px dashed var(--line)}
+.ck-item:last-child{border-bottom:none}
+.ck-item input[type=checkbox]{width:18px;height:18px;margin-top:3px;accent-color:var(--pri);flex-shrink:0;cursor:pointer}
+.ck-item .t{flex:1;font-size:14px;line-height:1.5}
+.ck-item.done .t{text-decoration:line-through;color:var(--ink2)}
+.ck-item .del{background:none;border:none;color:var(--ink2);cursor:pointer;font-size:14px;padding:2px 6px}
+.addrow{display:flex;gap:8px;margin-top:10px}
+.addrow input{flex:1}
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .hd{font-size:12px;text-align:center;color:var(--ink2);padding:4px 0;font-weight:600}
+.cal .day{background:#fdfbff;border:1px solid var(--line);border-radius:10px;min-height:74px;padding:6px;font-size:12px;position:relative;cursor:pointer;transition:.15s}
+.cal .day:hover{border-color:var(--pri)}
+.cal .day.blank{background:transparent;border:none}
+.cal .day.today{border:2px solid var(--pri);background:var(--lav)}
+.cal .day .num{font-weight:700;color:var(--pri-d);font-size:13px}
+.cal .day .dot{position:absolute;bottom:5px;right:6px;font-size:10px}
+.cal .day .ev{background:var(--lav2);border-radius:5px;padding:1px 4px;margin-top:3px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal .day.weekend .num{color:var(--bad)}
+/* monthly review grid */
+.mrev{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.mrev{grid-template-columns:1fr}}
+.mrev label{font-size:12px;color:var(--pri-d);font-weight:600;display:block;margin-bottom:4px}
+/* tabs inside */
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.subtabs button{background:var(--lav);border:none;color:var(--pri-d);padding:7px 14px;border-radius:18px;font-size:13px;cursor:pointer;font-family:inherit}
+.subtabs button.active{background:var(--pri);color:#fff}
+/* AI */
+.ai-msg{padding:12px 14px;border-radius:14px;margin-bottom:10px;font-size:14px;line-height:1.8;white-space:pre-wrap;max-width:92%}
+.ai-msg.user{background:var(--lav2);margin-left:auto}
+.ai-msg.bot{background:var(--lav);border-left:3px solid var(--pri)}
+.ai-msg.think{color:var(--ink2);font-style:italic;font-size:13px}
+.think-toggle{background:none;border:none;color:var(--ink2);font-size:12px;cursor:pointer;text-decoration:underline;padding:0;font-family:inherit}
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat{flex:1;min-width:120px;background:linear-gradient(135deg,var(--lav),#fff);border-radius:14px;padding:12px 14px;border:1px solid var(--line)}
+.stat .v{font-size:22px;font-weight:800;color:var(--pri-d)}
+.stat .k{font-size:12px;color:var(--ink2)}
+.progress{height:8px;background:var(--lav2);border-radius:6px;overflow:hidden;margin-top:6px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--pri2));border-radius:6px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--pri-d);color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;opacity:0;transition:.3s;z-index:99;pointer-events:none}
+.toast.on{opacity:1}
+.dbox{border:2px solid var(--pri-d);border-radius:14px;overflow:hidden;max-width:520px;margin:0 auto}
+.dbox .top{background:var(--pri-d);color:#fff;text-align:center;padding:10px;font-weight:700;letter-spacing:2px}
+.dbox .q{padding:18px;text-align:center;font-size:16px;line-height:1.7;min-height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.dbox .ans{display:grid;grid-template-columns:1fr 1fr}
+.dbox .ans button{padding:16px;background:#fff;border:none;border-top:1.5px solid var(--line);font-size:15px;cursor:pointer;font-family:inherit;color:var(--ink)}
+.dbox .ans button:first-child{border-right:1.5px solid var(--line)}
+.dbox .ans button:hover{background:var(--lav)}
+.dbox .log{max-height:150px;overflow:auto;padding:8px 14px;font-size:12px;color:var(--ink2);border-top:1px dashed var(--line)}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(60,40,90,.45);z-index:90;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:480px;max-height:85vh;overflow:auto}
+.modal h4{color:var(--pri-d);margin-bottom:10px}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:8px;text-align:center;font-size:11px;color:var(--ink2);z-index:40}
+@media print{nav,footer,.noprint{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <span class="koi">🐟</span><h1>锦鲤紫 · 2026 规划本</h1>
+  <nav id="nav"></nav>
+</header>
+<main>
+  <!-- ============ 仪表盘 ============ -->
+  <section class="page" id="p-dash">
+    <h2>今天 · <span id="dash-date"></span></h2>
+    <div class="stat-row">
+      <div class="stat"><div class="v" id="st-tasks">0/0</div><div class="k">今日待办完成</div><div class="progress"><i id="st-tasks-bar"></i></div></div>
+      <div class="stat"><div class="v" id="st-events">0</div><div class="k">今日日程</div></div>
+      <div class="stat"><div class="v" id="st-week">W?</div><div class="k">本周第几周</div></div>
+      <div class="stat"><div class="v" id="st-q">Q?</div><div class="k">当前季度</div></div>
+    </div>
+    <div class="card"><h3>✅ 今日三栏速记</h3>
+      <div id="dash-tasks"></div>
+      <div class="addrow"><input type="text" id="dash-new" placeholder="添加今日待办…（回车）"><button class="btn sm" onclick="addQuick()">添加</button></div>
+      <div class="hint">今日详细记录请到「每日三栏」页。</div>
+    </div>
+    <div class="card"><h3>💡 今日灵感</h3><div class="hint" id="dash-quote"></div><div class="hint" id="dash-streak" style="margin-top:8px"></div></div>
+    <div class="card"><h3>🤖 AI 快速复盘</h3>
+      <div class="hint">一键让 AI 回顾你最近 7 天的记录，给出进展分析与生活建议。</div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="aiReview(7)">复盘近 7 天</button><button class="btn ghost" onclick="go('ai')">进入 AI 空间 →</button></div>
+    </div>
+  </section>
+
+  <!-- ============ 年度目标 ============ -->
+  <section class="page" id="p-goals">
+    <h2>🎯 GOALS 2026</h2>
+    <div class="card">
+      <h3>我想成为一个怎样的人？</h3>
+      <textarea id="g-vision" placeholder="1/2/5 年后、或下个人生阶段的理想生活…"></textarea>
+    </div>
+    <div class="card">
+      <h3>今年想进攻的目标</h3>
+      <div class="hint">结构：主要目标 → 4 个季度小目标（Q1–Q4）→ 可执行 KPI → 变成什么习惯</div>
+      <div id="goal-list"></div>
+      <div class="row" style="margin-top:10px"><button class="btn ghost" onclick="addGoal()">＋ 添加目标</button></div>
+    </div>
+    <div class="card"><h3>🧭 SWOT 分析 · 扬长避短</h3>
+      <div class="grid2">
+        <div><label class="f">S 优势</label><textarea id="swot-s"></textarea></div>
+        <div><label class="f">W 劣势</label><textarea id="swot-w"></textarea></div>
+        <div><label class="f">O 机会</label><textarea id="swot-o"></textarea></div>
+        <div><label class="f">T 威胁</label><textarea id="swot-t"></textarea></div>
+      </div>
+    </div>
+    <div class="card"><h3>🌈 梦想版</h3>
+      <div class="grid2">
+        <div><label class="f">学业/事业</label><textarea data-dream="career"></textarea></div>
+        <div><label class="f">身体健康</label><textarea data-dream="health"></textarea></div>
+        <div><label class="f">理财财务</label><textarea data-dream="finance"></textarea></div>
+        <div><label class="f">人际关系</label><textarea data-dream="social"></textarea></div>
+        <div><label class="f">个人技能</label><textarea data-dream="skill"></textarea></div>
+        <div><label class="f">思维内在</label><textarea data-dream="mind"></textarea></div>
+      </div>
+      <div class="hint">可模仿的生活榜样：<input type="text" id="g-model" placeholder="例如：Naval、某位博主…"></div>
+    </div>
+  </section>
+
+  <!-- ============ 季度规划 ============ -->
+  <section class="page" id="p-quarter">
+    <h2>📅 季度规划 & 反思</h2>
+    <div class="subtabs" id="q-tabs"></div>
+    <div class="card"><h3 id="q-title">Q1 规划</h3>
+      <label class="f">这季度最想完成的事情是什么？</label>
+      <textarea id="q-plan"></textarea>
+      <label class="f">理想生活状态</label>
+      <textarea id="q-ideal"></textarea>
+    </div>
+    <div class="card"><h3>季末反思</h3>
+      <div class="grid2">
+        <div><label class="f">进步 / 值得开心的事</label><textarea id="q-win"></textarea></div>
+        <div><label class="f">不足和失误</label><textarea id="q-miss"></textarea></div>
+        <div><label class="f">未来可以提升的点</label><textarea id="q-improve"></textarea></div>
+        <div><label class="f">满足度（1–10）</label><input type="text" id="q-score" inputmode="numeric"></div>
+      </div>
+    </div>
+    <div class="row"><button class="btn" onclick="aiQuarter()">🤖 让 AI 评估本季度规划</button></div>
+  </section>
+
+  <!-- ============ 月度 ============ -->
+  <section class="page" id="p-month">
+    <h2>🗓 月历 & 月度复盘</h2>
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn ghost sm" onclick="monthShift(-1)">←</button>
+        <strong id="cal-title" style="font-size:16px;color:var(--pri-d)"></strong>
+        <button class="btn ghost sm" onclick="monthShift(1)">→</button>
+        <span style="flex:1"></span>
+        <button class="btn sm" onclick="exportMonthICS()">📅 同步本月日程到苹果日历</button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="hint">点击日期添加日程/待办（可直接跳转苹果日历时间），右下角 🔵 表示当天有日程。</div>
+    </div>
+    <div class="card"><h3>月度复盘</h3>
+      <div class="mrev">
+        <div><label>本月目标</label><textarea id="m-goal"></textarea></div>
+        <div><label>已完成的事情</label><textarea id="m-done"></textarea></div>
+        <div><label>未完成的事情</label><textarea id="m-todo"></textarea></div>
+        <div><label>需要自省的事情</label><textarea id="m-reflect"></textarea></div>
+        <div><label>学到的事情</label><textarea id="m-learn"></textarea></div>
+        <div><label>其他</label><textarea id="m-other"></textarea></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" onclick="aiMonth()">🤖 AI 分析本月状态</button>
+        <button class="btn ghost" onclick="exportNotes()">📋 整理为备忘录文本</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 周计划 ============ -->
+  <section class="page" id="p-week">
+    <h2>📐 周计划</h2>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn ghost sm" onclick="weekShift(-1)">← 上周</button>
+      <strong id="week-title" style="color:var(--pri-d)"></strong>
+      <button class="btn ghost sm" onclick="weekShift(1)">下周 →</button>
+      <span style="flex:1"></span>
+      <span class="badge" id="week-stat"></span>
+    </div>
+    <div class="card"><label class="f">本周核心目标（Top 3）</label><textarea id="w-goal"></textarea></div>
+    <div class="grid3" id="week-cols"></div>
+    <div class="card"><h3>周末回顾</h3>
+      <div class="grid2">
+        <div><label class="f">本周完成</label><textarea id="w-done"></textarea></div>
+        <div><label class="f">下周改进</label><textarea id="w-next"></textarea></div>
+      </div>
+    </div>
+    <div class="hint">💡 上面的待办直接汇总自「🗓 月度」页的日程：在月历里点击日期添加的日程/待办会自动出现在对应周，勾选小方框即确认完成。</div>
+  </section>
+
+  <!-- ============ 每日三栏 ============ -->
+  <section class="page" id="p-day">
+    <h2>☀️ 每日三栏</h2>
+    <div class="row" style="margin-bottom:12px">
+      <input type="date" id="day-date" style="max-width:180px" onchange="renderDay()">
+      <button class="btn ghost sm" onclick="dayShift(-1)">← 前一天</button>
+      <button class="btn ghost sm" onclick="dayShift(1)">后一天 →</button>
+    </div>
+    <div class="grid3">
+      <div class="card"><h3>✅ 要做 To Do</h3><div id="d-tasks"></div>
+        <div class="addrow"><input type="text" id="d-new" placeholder="回车添加" onkeydown="if(event.key==='Enter')addDayTask()"><button class="btn sm" onclick="addDayTask()">＋</button></div></div>
+      <div class="card"><h3>📖 学到 Learned</h3><textarea id="d-learn" style="min-height:150px" placeholder="今天学到了什么？"></textarea></div>
+      <div class="card"><h3>💭 感悟 Feelings</h3><textarea id="d-feel" style="min-height:150px" placeholder="心情、感悟、值得记录的瞬间…"></textarea></div>
+    </div>
+    <div class="card"><h3>📖 一日三问</h3>
+      <label class="f">今天最重要的一件事完成了吗？</label><textarea id="d-q1"></textarea>
+      <label class="f">明天最想推进什么？</label><textarea id="d-q2"></textarea>
+    </div>
+  </section>
+
+  <!-- ============ 决策黑箱 ============ -->
+  <section class="page" id="p-decide">
+    <h2>⬛ 决策黑箱</h2>
+    <div class="card">
+      <div class="hint" style="margin-bottom:12px">纠结时使用：认真回答每个问题，跟随黑箱的最终指引。（灵感来自 ElenaLin 决策黑箱页）</div>
+      <div class="dbox">
+        <div class="top">DECISION BOX · 决策黑箱</div>
+        <div class="q"><div id="dbox-q" style="font-weight:600">在下面写下你要做的决定，然后开始。</div>
+          <input type="text" id="dbox-input" placeholder="我要不要……？" style="max-width:360px">
+          <button class="btn sm" onclick="dboxStart()">开始</button></div>
+        <div class="ans" id="dbox-ans" style="display:none">
+          <button onclick="dboxAnswer('是')">是 / 愿意</button><button onclick="dboxAnswer('否')">否 / 不愿意</button>
+        </div>
+        <div class="log" id="dbox-log"></div>
+      </div>
+    </div>
+    <div class="card"><h3>历史决策</h3><div id="dbox-hist"></div></div>
+  </section>
+
+  <!-- ============ 学习计划 ============ -->
+  <section class="page" id="p-study">
+    <h2>📚 学习计划</h2>
+    <div class="card"><h3>总体学习目标</h3><textarea id="s-goal" placeholder="今年要学什么？考证？技能？语言？"></textarea></div>
+    <div class="row" style="margin-bottom:12px"><button class="btn" onclick="openMod()">＋ 新建学习模块</button></div>
+    <div id="mod-list"></div>
+
+    <div class="modal" id="mod-modal" onclick="if(event.target===this)closeMod()">
+      <div class="box">
+        <h4 id="mod-title">新建学习模块</h4>
+        <label class="f">模块名称（如：中级会计、英语口语）</label><input type="text" id="mod-name" placeholder="模块名称">
+        <label class="f">目标描述 / 计划</label><textarea id="mod-desc" placeholder="例如：2026年9月通过中级会计实务+经济法"></textarea>
+        <label class="f">打卡总目标（次）</label><input type="text" id="mod-target" inputmode="numeric" placeholder="例如 100">
+        <div class="row" style="margin-top:14px"><button class="btn" onclick="saveMod()">保存</button><span style="flex:1"></span><button class="btn ghost" onclick="closeMod()">取消</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AI 空间 ============ -->
+  <section class="page" id="p-ai">
+    <h2>🤖 AI 生活教练</h2>
+    <div class="card"><h3>⚙️ API 设置</h3>
+      <div class="grid2">
+        <div><label class="f">接口地址（OpenAI 兼容）</label><input type="text" id="ai-url" placeholder="https://api.openai.com/v1/chat/completions"></div>
+        <div><label class="f">模型</label><input type="text" id="ai-model" placeholder="gpt-4o-mini / deepseek-chat …"></div>
+      </div>
+      <label class="f">API Key（仅保存在本机浏览器）</label><input type="password" id="ai-key" placeholder="sk-…">
+      <div style="margin-top:8px">
+        <label class="f">一键预设</label>
+        <div class="row">
+          <button class="btn sm" onclick="presetAI('deepseek')">DeepSeek</button>
+          <button class="btn sm ghost" onclick="presetAI('zhipu')">智谱</button>
+          <button class="btn sm ghost" onclick="presetAI('siliconflow')">硅基流动</button>
+          <button class="btn sm ghost" onclick="presetAI('openai')">OpenAI</button>
+          <button class="btn sm ghost" onclick="aiTest()">🔌 测试连接</button>
+        </div>
+      </div>
+      <div class="hint">支持任何 OpenAI 兼容接口：OpenAI、DeepSeek、月之暗面、智谱、硅基流动等。Key 只存在本地，不会上传到任何第三方。DeepSeek Key 在 platform.deepseek.com 注册获取。</div>
+    </div>
+    <div class="card"><h3>💬 对话复盘</h3>
+      <div id="ai-chat" style="max-height:420px;overflow:auto"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sm ghost" onclick="aiReview(7)">📊 复盘近7天</button>
+        <button class="btn sm ghost" onclick="aiReview(30)">📊 复盘近30天</button>
+        <button class="btn sm ghost" onclick="aiMonth()">🗓 本月分析</button>
+        <button class="btn sm danger" onclick="if(confirm('清空对话？')){S.aiChat=[];renderChat();save()}">清空</button>
+      </div>
+      <div class="addrow"><input type="text" id="ai-input" placeholder="问问 AI：最近状态怎么样？给我一些建议…"><button class="btn" onclick="aiSend()">发送</button></div>
+    </div>
+  </section>
+
+  <!-- ============ 数据 ============ -->
+  <section class="page" id="p-data">
+    <h2>💾 数据与同步</h2>
+    <div class="card"><h3>📤 导出到苹果日历</h3>
+      <div class="hint">导出全部日程为 .ics 文件。iPhone/Mac 上打开文件即可一键加入「日历」App；电脑版日历（Outlook 等）同样支持。之后可在日历中订阅或手动同步。</div>
+      <div class="row" style="margin-top:8px"><button class="btn" onclick="exportAllICS()">导出全部日程 (.ics)</button><button class="btn ghost" onclick="exportMonthICS()">仅导出本月</button></div>
+    </div>
+    <div class="card"><h3>📝 导出到苹果备忘录</h3>
+      <div class="hint">把你的目标、复盘、最近记录整理成一条结构化文本，复制后粘贴到 iPhone 备忘录（长按 → 粘贴）。</div>
+      <div class="row" style="margin-top:8px"><button class="btn" onclick="exportNotes()">生成并复制</button></div>
+      <textarea id="notes-out" style="margin-top:10px;min-height:120px" readonly placeholder="生成的文本会出现在这里"></textarea>
+    </div>
+    <div class="card"><h3>💾 备份与恢复</h3>
+      <div class="row"><button class="btn ghost" onclick="backup()">导出备份 (JSON)</button>
+      <label class="btn ghost" style="display:inline-block;cursor:pointer">导入备份<input type="file" id="imp" accept=".json" style="display:none" onchange="restore(this)"></label></div>
+      <div class="hint">所有数据保存在本机浏览器（localStorage）。换设备或清理浏览器前请先导出备份。建议每周备份一次。</div>
+    </div>
+    <div class="card"><h3>📱 添加到主屏幕</h3>
+      <div class="hint">iPhone：Safari 打开本页 → 分享按钮 → 「添加到主屏幕」，即可像 App 一样全屏使用。<br>电脑：浏览器菜单 → 安装/创建快捷方式。在线部署后手机电脑数据各自独立，重要数据记得定期备份互通。</div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="ev-modal" onclick="if(event.target===this)closeEv()">
+  <div class="box">
+    <h4 id="ev-title">日程</h4>
+    <label class="f">内容</label><input type="text" id="ev-text" placeholder="例如：14:00 健身 / 复习会计">
+    <div class="grid2">
+      <div><label class="f">时间（可选）</label><input type="time" id="ev-time"></div>
+      <div><label class="f">类型</label><select id="ev-type"><option>日程</option><option>待办</option><option>学习打卡</option></select></div>
+    </div>
+    <div class="row" style="margin-top:14px"><button class="btn" onclick="saveEv()">保存</button><button class="btn ghost" onclick="window.open(makeCalUrl(),' _blank')">📅 加入苹果日历</button><span style="flex:1"></span><button class="btn danger sm" onclick="if(confirm('删除当天的全部日程？')){delEv()}">清空当日</button></div>
+    <div class="hint" id="ev-list"></div>
+  </div>
+</div>
+<div class="modal" id="sync-modal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="box">
+    <h4>📅 已导出 <span id="sync-scope"></span> 的 .ics 文件</h4>
+    <h3 style="margin-top:6px">📱 iPhone / iPad 同步步骤</h3>
+    <div class="hint" style="font-size:13px;line-height:2">
+      1. 用 <b>Safari</b> 打开本 App 并点击导出（文件会出现在下载中）<br>
+      2. Safari 地址栏旁点「下载」图标 → 点刚下载的 .ics 文件<br>
+      3. 系统自动跳转「日历」App → 选择要加入的日历（建议新建一个"规划本"日历）→ 确认<br>
+      ✅ 全部日程一键进入苹果日历，可收提醒通知
+    </div>
+    <h3 style="margin-top:10px">💻 Mac 同步</h3>
+    <div class="hint" style="font-size:13px;line-height:2">双击 .ics 文件 →「日历」App 弹出导入窗口 → 选择日历 → 好。若 iCloud 已登录，日程会自动同步到 iPhone。</div>
+    <h3 style="margin-top:10px">🖥 Windows（Outlook / 日历）</h3>
+    <div class="hint" style="font-size:13px;line-height:2">双击 .ics 文件，Outlook 会提示添加；或在 Windows「日历」App 设置 → 添加日历 → 从文件导入。</div>
+    <div class="hint" style="margin-top:12px;color:var(--warn)">💡 小提示：.ics 是"导入式"同步——App 里日程更新后，需重新导出导入一次（同日期事件会更新而非重复）。</div>
+    <div class="row" style="margin-top:14px"><button class="btn" onclick="this.closest('.modal').classList.remove('on')">知道了</button></div>
+  </div>
+</div>
+<footer>锦鲤紫 · 基于 ElenaLin Planner 2026 设计 · 数据仅存本地 · 🐟 好运常在</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 存储 ============ */
+const LS='koiplanner2026';
+let S=JSON.parse(localStorage.getItem(LS)||'{}');
+S=Object.assign({goals:[],events:{},days:{},weeks:{},quarters:{},months:{},swot:{},dream:{},aiChat:[],aiCfg:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',key:'sk-1e87b047360d4850ab2a11ef45220335'},dbox:[],study:[],studyMods:[]},S);
+if(!S.aiCfg.url)S.aiCfg.url='https://api.deepseek.com/chat/completions';
+if(!S.aiCfg.model)S.aiCfg.model='deepseek-chat';
+if(!S.aiCfg.key)S.aiCfg.key='sk-1e87b047360d4850ab2a11ef45220335';
+if(S.studyMods.length===0&&S.study.length){S.studyMods=[{id:1,name:'默认模块',desc:'（由旧版打卡记录迁移）',target:0,color:'var(--pri)',logs:S.study}];S.study=[];}
+function save(){localStorage.setItem(LS,JSON.stringify(S))}
+function $(id){return document.getElementById(id)}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200)}
+function k(d){if(typeof d==='string')return d;const x=d;return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+const today=()=>k(new Date());
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+/* ============ 导航 ============ */
+const PAGES=[['goals','🎯 年度目标'],['quarter','📅 季度'],['week','📐 周计划'],['dash','🏠 今天'],['day','☀️ 每日'],['study','📚 学习'],['month','🗓 月度'],['ai','🤖 AI'],['decide','⬛ 决策黑箱'],['data','💾 数据']];
+$('nav').innerHTML=PAGES.map(([id,n])=>`<button data-p="${id}" onclick="go('${id}')">${n}</button>`).join('');
+function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));$('p-'+p).classList.add('on');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));location.hash=p;
+  const refresh={week:()=>renderWeek(),month:()=>renderCal(),day:()=>renderDay(),study:()=>renderStudy(),ai:()=>renderChat(),goals:()=>renderGoals(),dash:()=>{renderDashToday();renderDash()}}[p];if(refresh)refresh();}
+window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);if($('p-'+p))go(p)});
+const init=location.hash.slice(1);
+
+/* ============ 双向绑定 ============ */
+function bindAll(){
+  // simple fields
+  [['g-vision','vision'],['g-model','model'],['s-goal','sg']].forEach(([id,key])=>{
+    if(S[key]!==undefined)$(id).value=S[key];
+    $(id).addEventListener('input',e=>{S[key]=e.target.value;save()});
+  });
+  // swot
+  ['s','w','o','t'].forEach(x=>{const id='swot-'+x;if(S.swot[x])$(id).value=S.swot[x];$(id).addEventListener('input',e=>{S.swot[x]=e.target.value;save()})});
+  // dreams
+  document.querySelectorAll('[data-dream]').forEach(t=>{const dk=t.dataset.dream;if(S.dream[dk])t.value=S.dream[dk];t.addEventListener('input',e=>{S.dream[dk]=e.target.value;save()})});
+  // ai cfg
+  ['ai-url','ai-model','ai-key'].forEach((id,i)=>{const keys=['url','model','key'];if(S.aiCfg[keys[i]])$(id).value=S.aiCfg[keys[i]];$(id).addEventListener('input',e=>{S.aiCfg[keys[i]]=e.target.value;save()})});
+  $('day-date').value=today();
+}
+
+/* ============ 年度目标 ============ */
+const AREAS=['学业/事业','财务','健康','感情','娱乐','爱好','其他'];
+function renderGoals(){
+  $('goal-list').innerHTML=S.goals.map((g,i)=>`
+   <div class="card" style="background:#fdfbff;border:1px solid var(--line)">
+     <div class="row"><select onchange="S.goals[${i}].area=this.value;save()" style="max-width:160px">${AREAS.map(a=>`<option ${g.area===a?'selected':''}>${a}</option>`).join('')}</select>
+     <input type="text" value="${esc(g.name)}" placeholder="目标名称" style="flex:1" onchange="S.goals[${i}].name=this.value;save()">
+     <button class="btn danger sm" onclick="S.goals.splice(${i},1);save();renderGoals()">删除</button></div>
+     <div class="grid2" style="margin-top:8px">
+       <div><label class="f">为什么重要</label><textarea onchange="S.goals[${i}].why=this.value;save()">${esc(g.why)}</textarea></div>
+       <div><label class="f">可执行 KPI</label><textarea onchange="S.goals[${i}].kpi=this.value;save()">${esc(g.kpi)}</textarea></div>
+       <div><label class="f">Q1–Q2 小目标</label><textarea onchange="S.goals[${i}].q12=this.value;save()">${esc(g.q12)}</textarea></div>
+       <div><label class="f">Q3–Q4 小目标</label><textarea onchange="S.goals[${i}].q34=this.value;save()">${esc(g.q34)}</textarea></div>
+       <div><label class="f">变成什么习惯？</label><textarea onchange="S.goals[${i}].habit=this.value;save()">${esc(g.habit)}</textarea></div>
+       <div><label class="f">进度 %</label><input type="text" inputmode="numeric" value="${g.progress||0}" onchange="S.goals[${i}].progress=+this.value||0;save();renderDash()"> </div>
+     </div></div>`).join('')||'<div class="hint">还没有目标，点下面添加 ✨</div>';
+}
+function addGoal(){S.goals.push({area:'学业/事业',name:'',why:'',kpi:'',q12:'',q34:'',habit:'',progress:0});save();renderGoals()}
+function renderDash(){
+  let sum=S.goals.reduce((a,g)=>a+(g.progress||0),0);
+  if(S.goals.length)sum=Math.round(sum/S.goals.length);
+  const bar=document.querySelector('#st-goals-bar');if(bar)bar.style.width=sum+'%';
+}
+
+/* ============ 季度 ============ */
+let curQ=Math.min(4,Math.floor(new Date().getMonth()/3)+1);
+function renderQ(){
+  $('q-tabs').innerHTML=[1,2,3,4].map(q=>`<button class="${q===curQ?'active':''}" onclick="curQ=${q};renderQ()">Q${q}</button>`).join('');
+  $('q-title').textContent=`Q${curQ} 规划`;
+  const d=S.quarters[curQ]||{};
+  [['q-plan','plan'],['q-ideal','ideal'],['q-win','win'],['q-miss','miss'],['q-improve','improve'],['q-score','score']].forEach(([id,key])=>{$(id).value=d[key]||'';$(id).oninput=e=>{(S.quarters[curQ]=S.quarters[curQ]||{})[key]=e.target.value;save()};$(id).oninput=null;$(id).addEventListener('input',e=>{(S.quarters[curQ]=S.quarters[curQ]||{})[key]=e.target.value;save()})});
+}
+
+/* ============ 月历 ============ */
+let curY=2026,curM=10; // Nov 2026 (0-based)
+function monthShift(d){curM+=d;if(curM<0){curM=11;curY--}if(curM>11){curM=0;curY++}renderCal();renderMonthRev()}
+function renderCal(){
+  $('cal-title').textContent=`${curY}年${curM+1}月`;
+  const first=new Date(curY,curM,1);let off=(first.getDay()+6)%7;
+  const dim=new Date(curY,curM+1,0).getDate();
+  let html=['一','二','三','四','五','六','日'].map(d=>`<div class="hd">${d}</div>`).join('');
+  for(let i=0;i<off;i++)html+='<div class="day blank"></div>';
+  for(let d=1;d<=dim;d++){
+    const dk=`${curY}-${String(curM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs=S.events[dk]||[];
+    const we=[5,6].includes((new Date(curY,curM,d).getDay()+6)%7);
+    html+=`<div class="day ${dk===today()?'today':''} ${we?'weekend':''}" onclick="openEv('${dk}')"><div class="num">${d}</div>${evs.slice(0,2).map(e=>`<div class="ev">${esc(e.text)}</div>`).join('')}${evs.length>2?`<div class="ev">+${evs.length-2}</div>`:''}${evs.length?'<div class="dot">🔵</div>':''}</div>`;
+  }
+  $('cal').innerHTML=html;
+  renderMonthRev();
+}
+function renderMonthRev(){
+  const mk=`${curY}-${String(curM+1).padStart(2,'0')}`;
+  const d=S.months[mk]||{};
+  ['goal','done','todo','reflect','learn','other'].forEach(key=>{
+    const id='m-'+key;$(id).value=d[key]||'';
+    $(id).onchange=e=>{(S.months[mk]=S.months[mk]||{})[key]=e.target.value;save()};
+  });
+}
+
+/* ============ 日程事件 ============ */
+let evDate=null;
+function openEv(dk){evDate=dk;$('ev-title').textContent=dk+' 的日程';$('ev-text').value='';$('ev-time').value='';renderEvList();$('ev-modal').classList.add('on')}
+function closeEv(){$('ev-modal').classList.remove('on')}
+function renderEvList(){const evs=S.events[evDate]||[];$('ev-list').innerHTML=evs.length?'已有：'+evs.map((e,i)=>`「${esc(e.text)}${e.time?' '+e.time:''} <button class="think-toggle" onclick="S.events['${evDate}'].splice(${i},1);save();renderCal();renderWeek();renderEvList()">✕</button>」`).join(' '):''}
+function saveEv(){const t=$('ev-text').value.trim();if(!t)return;(S.events[evDate]=S.events[evDate]||[]).push({text:t,time:$('ev-time').value,type:$('ev-type').value});save();closeEv();renderCal();renderWeek();renderDay();toast('已保存 ✅')}
+function delEv(){delete S.events[evDate];save();closeEv();renderCal();toast('已删除当日全部日程')}
+
+/* ============ 周计划 ============ */
+let weekOff=0;
+function weekKey(){const d=new Date();d.setDate(d.getDate()+weekOff*7);const on=new Date(d);on.setDate(d.getDate()-((d.getDay()+6)%7));return k(on)}
+function weekShift(d){weekOff+=d;renderWeek()}
+function toggleEvDone(dk,i){const e=(S.events[dk]||[])[i];if(!e)return;e.done=!e.done;save();renderWeek()}
+function renderWeek(){
+  const wk=weekKey();const d=new Date(wk);const end=new Date(d);end.setDate(d.getDate()+6);
+  $('week-title').textContent=`${wk} ~ ${k(end)}`;
+  const w=S.weeks[wk]||{};
+  [['w-goal','goal'],['w-done','done'],['w-next','next']].forEach(([id,key])=>{$(id).value=w[key]||'';$(id).onchange=e=>{(S.weeks[wk]=S.weeks[wk]||{})[key]=e.target.value;save()}});
+  const days=[...Array(7)].map((_,i)=>{const dd=new Date(wk);dd.setDate(d.getDate()+i);return k(dd)});
+  const names=['周一','周二','周三','周四','周五','周六','周日'];
+  let total=0,doneN=0;
+  $('week-cols').innerHTML=days.map((dk,i)=>{
+    const evs=S.events[dk]||[];
+    const dayTasks=((S.days[dk]||{}).tasks)||[];
+    const isToday=dk===today();
+    evs.forEach(e=>{total++;if(e.done)doneN++});
+    dayTasks.forEach(t=>{total++;if(t.done)doneN++});
+    return `<div class="card" style="${isToday?'border:2px solid var(--pri)':''}">
+      <h3>${names[i]} ${dk.slice(5)} ${isToday?'<span class="badge">今天</span>':''}</h3>
+      ${evs.map((e,j)=>`<div class="ck-item ${e.done?'done':''}"><input type="checkbox" ${e.done?'checked':''} onchange="toggleEvDone('${dk}',${j})"><div class="t">${e.time?`<span class="badge">${e.time}</span>`:''}${esc(e.text)}</div></div>`).join('')}
+      ${dayTasks.map((t,j)=>`<div class="ck-item ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="S.days['${dk}'].tasks[${j}].done=this.checked;save();renderWeek();renderDashToday()"><div class="t">☀️ ${esc(t.text)}</div></div>`).join('')}
+      ${(!evs.length&&!dayTasks.length)?'<div class="hint">当天暂无日程</div>':''}
+      <div class="hint" style="margin-top:6px">📝 <a href="#" style="color:var(--pri-d)" onclick="openEv('${dk}');return false">添加/编辑日程</a></div>
+    </div>`;
+  }).join('');
+  const ws=$('week-stat');ws.textContent=total?`本周 ${doneN}/${total} 已完成`:'本周暂无日程';
+}
+
+/* ============ 每日三栏 ============ */
+function dayShift(d){const dd=$('day-date');const x=new Date(dd.value);x.setDate(x.getDate()+d);dd.value=k(x);renderDay()}
+function renderDay(){
+  const dk=$('day-date').value||today();
+  const d=S.days[dk]||{};
+  $('d-learn').value=d.learn||'';$('d-feel').value=d.feel||'';$('d-q1').value=d.q1||'';$('d-q2').value=d.q2||'';
+  ['learn','feel','q1','q2'].forEach(key=>{$('d-'+key).onchange=e=>{(S.days[dk]=S.days[dk]||{})[key]=e.target.value;save()}});
+  $('d-tasks').innerHTML=(d.tasks||[]).map((t,i)=>`
+    <div class="ck-item ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="S.days['${dk}'].tasks[${i}].done=this.checked;save();renderDay();renderDashToday()"><div class="t">${esc(t.text)}</div><button class="del" onclick="S.days['${dk}'].tasks.splice(${i},1);save();renderDay()">✕</button></div>`).join('');
+}
+function addDayTask(){const v=$('d-new').value.trim();if(!v)return;const dk=$('day-date').value||today();(S.days[dk]=S.days[dk]||{}).tasks=S.days[dk].tasks||[];S.days[dk].tasks.push({text:v,done:false});$('d-new').value='';save();renderDay()}
+function renderDashToday(){const dk=today();const tasks=(S.days[dk]?.tasks)||[];const done=tasks.filter(t=>t.done).length;
+  $('st-tasks').textContent=`${done}/${tasks.length}`;$('st-tasks-bar').style.width=(tasks.length?done/tasks.length*100:0)+'%';
+  $('dash-tasks').innerHTML=tasks.map((t,i)=>`<div class="ck-item ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="S.days['${dk}'].tasks[${i}].done=this.checked;save();renderDashToday()"><div class="t">${esc(t.text)}</div></div>`).join('')||'<div class="hint">今天还没有待办 ✨</div>';
+}
+function addQuick(){const v=$('dash-new').value.trim();if(!v)return;const dk=today();(S.days[dk]=S.days[dk]||{}).tasks=S.days[dk].tasks||[];S.days[dk].tasks.push({text:v,done:false});$('dash-new').value='';save();renderDashToday()}
+
+/* ============ 学习模块 ============ */
+let editMod=-1,openMods={};
+function renderStudy(){
+  const list=$('mod-list');
+  list.innerHTML=S.studyMods.map((m,i)=>{
+    const n=m.logs.length, tgt=m.target||0, pct=tgt?Math.min(100,Math.round(n/tgt*100)):(n?Math.min(100,n*10):0);
+    const last=m.logs.length?m.logs[m.logs.length-1].date:'—';
+    const open=!!openMods[m.id];
+    return `<div class="card" style="border-left:5px solid ${m.color||'var(--pri)'}">
+      <div class="row" style="cursor:pointer" onclick="toggleMod(${m.id})">
+        <strong style="font-size:15px;flex:1">${open?'📂':'📁'} ${esc(m.name)}</strong>
+        <span class="badge">${n}${tgt?'/'+tgt:''} 次</span>
+        <span class="badge" style="background:var(--lav2)">最近:${last}</span>
+      </div>
+      ${m.desc?`<div class="hint" style="margin:8px 0 0">${esc(m.desc)}</div>`:''}
+      <div class="progress" style="margin-top:10px"><i style="width:${pct}%"></i></div>
+      <div class="hint">${pct}% 完成</div>
+      ${open?`
+      <div style="margin-top:10px;max-height:260px;overflow:auto">${[...m.logs].reverse().map((l,j)=>`
+        <div class="ck-item"><div class="t"><span class="badge">${l.date}</span>${esc(l.note)}</div><button class="del" onclick="delLog(${m.id},${m.logs.length-1-j})">✕</button></div>`).join('')||'<div class="hint">还没有打卡记录，先打第一次卡吧 📖</div>'}</div>
+      <div class="addrow"><input type="date" id="sd-${m.id}" value="${today()}"><input type="text" id="sn-${m.id}" placeholder="今天学了什么（回车打卡）" onkeydown="if(event.key==='Enter')addLog(${m.id})"><button class="btn sm" onclick="addLog(${m.id})">打卡</button></div>
+      <div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="editModFn(${i})">✏️ 编辑</button><button class="btn sm ghost" onclick="aiStudy(${i})">🤖 AI 分析进度</button><span style="flex:1"></span><button class="btn sm danger" onclick="delMod(${i})">删除模块</button></div>`:''}
+    </div>`;
+  }).join('')||'<div class="card hint">还没有学习模块。点击上方「＋ 新建学习模块」，为每个目标（如中级会计、英语）建立独立文件夹，分别打卡与追踪进度。</div>';
+}
+function toggleMod(id){openMods[id]=!openMods[id];renderStudy()}
+function openMod(){editMod=-1;$('mod-title').textContent='新建学习模块';$('mod-name').value='';$('mod-desc').value='';$('mod-target').value='';$('mod-modal').classList.add('on')}
+function editModFn(i){editMod=i;const m=S.studyMods[i];$('mod-title').textContent='编辑模块';$('mod-name').value=m.name;$('mod-desc').value=m.desc||'';$('mod-target').value=m.target||'';$('mod-modal').classList.add('on')}
+function closeMod(){$('mod-modal').classList.remove('on')}
+function saveMod(){
+  const name=$('mod-name').value.trim();if(!name){toast('请填写模块名称');return}
+  const data={name,desc:$('mod-desc').value.trim(),target:+$('mod-target').value||0};
+  if(editMod>=0)Object.assign(S.studyMods[editMod],data);
+  else S.studyMods.push(Object.assign({id:Date.now(),color:['var(--pri)','#e0a458','#7fb98a','#d97a7a','#6aa6c9'][S.studyMods.length%5],logs:[]},data));
+  save();closeMod();renderStudy();toast('已保存 ✅');
+}
+function addLog(mid){
+  const m=S.studyMods.find(x=>x.id===mid);if(!m)return;
+  const note=$('sn-'+mid).value.trim();if(!note){toast('写点今天学的内容吧');return}
+  m.logs.push({date:$('sd-'+mid).value||today(),note});save();renderStudy();toast('打卡成功 🎉');
+}
+function delLog(mid,j){const m=S.studyMods.find(x=>x.id===mid);m.logs.splice(j,1);save();renderStudy()}
+function delMod(i){const m=S.studyMods[i];if(!confirm(`删除「${m.name}」及其 ${m.logs.length} 条打卡记录？（可在删除前先导出备份）`))return;S.studyMods.splice(i,1);save();renderStudy()}
+function aiStudy(i){
+  const m=S.studyMods[i];const goal=S.sg||'';
+  const q=`我的学习模块「${m.name}」目标：${m.desc||'-'}，打卡总目标 ${m.target||'未设'} 次，目前已打卡 ${m.logs.length} 次。最近记录：${[...m.logs].slice(-10).map(l=>`${l.date} ${l.note}`).join('；')||'无'}。年度学习目标：${goal||'-'}。请分析我的学习进度与节奏，并给出建议。`;
+  S.aiChat.push({role:'user',content:q});S.aiChat.push({role:'assistant',content:'思考中…'});renderChat();go('ai');
+  aiCall([{role:'system',content:aiCtx()},{role:'user',content:q}]).then(res=>{S.aiChat[S.aiChat.length-1]=res;save();renderChat()})
+  .catch(e=>{S.aiChat[S.aiChat.length-1]={role:'assistant',content:'❌ '+e.message};renderChat()});
+}
+
+/* ============ 决策黑箱 ============ */
+const DQ=['这件事最坏的结果是什么？我能承受吗？','一年后回头看，我会后悔没做吗？','做这个决定是出于恐惧，还是出于渴望？','如果没有任何人会评价我，我还会选它吗？','它是否符合我今年的核心目标？','这是我真正想要的，还是别人期待我想要的？','不做它，我的生活会有实质损失吗？'];
+let dbStep=-1,dbQ='';
+function dboxStart(){dbQ=$('dbox-input').value.trim();if(!dbQ){toast('先写下你的决定');return}dbStep=0;$('dbox-input').style.display='none';$('dbox-ans').style.display='grid';$('dbox-q').textContent=DQ[0];$('dbox-log').innerHTML=''}
+function dboxAnswer(a){$('dbox-log').innerHTML+=`<div>Q${dbStep+1} ${DQ[dbStep]} → <b>${a}</b></div>`;dbStep++;
+  if(dbStep>=DQ.length){const yes=$('dbox-log').textContent.split('→ 是').length-1;
+  const verdict=yes>=4?`🐟 黑箱指引：是的，去做「${dbQ}」。你的直觉和理性都在指向它。`:`🐟 黑箱指引：先放下「${dbQ}」。多数答案指向否定，把精力留给更重要的事。`;
+  $('dbox-q').textContent=verdict;$('dbox-ans').style.display='none';$('dbox-input').style.display='';$('dbox-input').value='';
+  S.dbox.push({date:today(),q:dbQ,verdict});save();renderDboxHist();}
+  else $('dbox-q').textContent=DQ[dbStep];
+}
+function renderDboxHist(){$('dbox-hist').innerHTML=S.dbox.slice(-10).reverse().map(d=>`<div class="ck-item"><div class="t"><span class="badge">${d.date}</span>${esc(d.q)}<br><span style="color:var(--pri-d)">${esc(d.verdict)}</span></div></div>`).join('')}
+
+/* ============ ICS 导出（苹果日历） ============ */
+function fmtICS(d,tm){let s=d.replace(/-/g,'');if(tm)s+='T'+tm.replace(':','')+'00';else s+='T090000';return s}
+function icsFor(keys){
+  const mk=keys.length?keys[0].slice(0,7):'2026-11';
+  let out='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//KoiPlanner2026//CN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:锦鲤紫规划-'+mk+'\r\nMETHOD:PUBLISH\r\n';
+  let n=0;
+  keys.forEach(dk=>{(S.events[dk]||[]).forEach(e=>{
+    out+='BEGIN:VEVENT\r\n';out+='UID:'+Date.now()+'-'+(n++)+'@koi\r\n';
+    out+='DTSTAMP:'+fmtICS(today(),'00:00')+'Z\r\n';
+    if(e.time){const[h,m]=e.time.split(':').map(Number);const end=h+1;
+    out+='DTSTART:'+fmtICS(dk,e.time)+'\r\n';out+='DTEND:'+fmtICS(dk,String(end).padStart(2,'0')+':'+String(m).padStart(2,'0'))+'\r\n';}
+    else{out+='DTSTART;VALUE=DATE:'+dk.replace(/-/g,'')+'\r\n';out+='DTEND;VALUE=DATE:'+dk.replace(/-/g,'')+'\r\n';}
+    out+='SUMMARY:'+(e.text||'日程')+'\r\n';out+='DESCRIPTION:来自锦鲤紫规划本\r\n';out+='END:VEVENT\r\n';});});
+  out+='END:VCALENDAR';
+  return out;
+}
+function dl(name,content,type='text/calendar'){
+  const b=new Blob([content],{type});
+  // iOS 添加到主屏幕（standalone 模式）下 a[download] 无效，改用系统分享面板
+  try{
+    const f=new File([b],name,{type});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){
+      navigator.share({files:[f],title:name}).then(()=>toast('已打开分享，可选「存储到文件」或直接导入日历')).catch(()=>{});
+      return;
+    }
+  }catch(e){}
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+  toast('已导出 '+name);
+}
+function exportAllICS(){dl('koi-2026-all.ics',icsFor(Object.keys(S.events)));showSyncGuide('全部日程')}
+function exportMonthICS(){
+  const mk=`${curY}-${String(curM+1).padStart(2,'0')}`;
+  const keys=Object.keys(S.events).filter(d=>d.startsWith(mk));
+  if(!keys.length){toast('本月还没有日程，先在月历上点击日期添加');return}
+  dl(`koi-${mk}.ics`,icsFor(keys));
+  showSyncGuide(`${curY}年${curM+1}月（${keys.reduce((a,d)=>a+(S.events[d]||[]).length,0)}条日程）`);
+}
+function showSyncGuide(scope){
+  $('sync-scope').textContent=scope;
+  $('sync-modal').classList.add('on');
+}
+function makeCalUrl(){const t=encodeURIComponent($('ev-text').value||'日程');const d=evDate||today();const tm=$('ev-time').value;
+  if(tm)return `calinvite://?start=${d.replace(/-/g,'')}T${tm.replace(':','')}00&end=${d.replace(/-/g,'')}T235900&title=${t}`;
+  return `calinvite://?start=${d.replace(/-/g,'')}T090000&end=${d.replace(/-/g,'')}T100000&title=${t}`;}
+
+/* ============ 备忘录导出 ============ */
+function buildNotes(){
+  const mk=`${curY}-${String(curM+1).padStart(2,'0')}`;const m=S.months[mk]||{};
+  let t=`🐟 锦鲤紫规划 · ${mk} 快照\n\n【年度愿景】\n${S.vision||'-'}\n\n【年度目标】\n`;
+  S.goals.forEach(g=>t+=`· [${g.area}] ${g.name}（进度 ${g.progress||0}%）${g.kpi?'\n  KPI: '+g.kpi:''}\n`);
+  t+=`\n【${mk}复盘】\n本月目标：${m.goal||'-'}\n已完成：${m.done||'-'}\n未完成：${m.todo||'-'}\n自省：${m.reflect||'-'}\n学到：${m.learn||'-'}\n`;
+  const recent=Object.keys(S.days).sort().slice(-7);
+  t+='\n【近7天记录】\n';recent.forEach(dk=>{const d=S.days[dk];t+=`${dk}：${(d.tasks||[]).map(x=>x.text+(x.done?'✓':'')).join('、')||'-'}${d.feel?'｜感悟:'+d.feel:''}\n`});
+  return t;
+}
+function exportNotes(){const t=buildNotes();$('notes-out').value=t;$('notes-out').select();document.execCommand&&document.execCommand('copy');
+  navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>toast('已复制，去备忘录粘贴 📋')).catch(()=>toast('已生成，请手动复制'));go('data');}
+
+/* ============ 备份 ============ */
+function backup(){dl('koi-backup.json',JSON.stringify(S),'application/json')}
+function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{S=Object.assign(S,JSON.parse(e.target.result));save();location.reload()}catch{toast('文件无效')}};r.readAsText(f)}
+
+/* ============ AI ============ */
+function aiCtx(){
+  let c='以下是用户"锦鲤紫2026规划本"的数据：\n【年度愿景】'+(S.vision||'未填写')+'\n【年度目标】\n';
+  S.goals.forEach(g=>c+=`- [${g.area}] ${g.name} 进度${g.progress||0}% KPI:${g.kpi||'-'}\n`);
+  c+='\n【近30天每日记录】\n';
+  Object.keys(S.days).sort().slice(-30).forEach(dk=>{const d=S.days[dk];const t=(d.tasks||[]).map(x=>(x.done?'✓':'✗')+x.text).join('；');
+    c+=`${dk} 待办:${t||'-'}${d.learn?' 学到:'+d.learn:''}${d.feel?' 感悟:'+d.feel:''}${d.q1?' 三问:'+d.q1:''}\n`});
+  c+='\n【月度复盘】\n'+Object.keys(S.months).sort().slice(-3).map(mk=>`${mk} 目标:${S.months[mk].goal||'-'} 已完成:${S.months[mk].done||'-'} 自省:${S.months[mk].reflect||'-'} 学到:${S.months[mk].learn||'-'}`).join('\n');
+  c+='\n【学习模块】\n'+(S.studyMods.map(m=>`- ${m.name}（目标:${m.desc||'-'} 打卡${m.logs.length}/${m.target||'?'}次）近10条:${[...m.logs].slice(-10).map(l=>`${l.date} ${l.note}`).join('；')||'无'}`).join('\n')||'无');
+  c+='\n\n你是用户的生活教练。请：1) 分析TA最近的执行进展与状态（完成率、趋势、精力模式）；2) 指出亮点与问题；3) 给出3条具体可执行的建议（贴合TA的目标）；4) 温暖但有洞察，像专业教练而非鸡汤。中文回答。';
+  return c;
+}
+function renderChat(){
+  $('ai-chat').innerHTML=S.aiChat.map(m=>{
+    if(m.role==='user')return `<div class="ai-msg user">${esc(m.content)}</div>`;
+    if(m.think)return `<div class="ai-msg bot"><button class="think-toggle" onclick="var b=this.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none'">🧠 思考过程（点击展开/收起）</button><div class="ai-msg think">${esc(m.think)}</div><div>${esc(m.content)}</div></div>`;
+    return `<div class="ai-msg bot">${esc(m.content)}</div>`;
+  }).join('')||'<div class="hint">和 AI 聊聊你的状态，或点上方快捷按钮开始复盘。配置好 API 后即可使用。</div>';
+  const c=$('ai-chat');c.scrollTop=c.scrollHeight;
+}
+async function aiCall(messages,think=true){
+  const cfg=S.aiCfg;
+  if(!cfg.url||!cfg.key){toast('请先在上方填写 API 地址和 Key');go('ai');throw new Error('未配置 API，请在 AI 页点「DeepSeek」预设并粘贴 Key')}
+  const model=cfg.model||(cfg.url.includes('deepseek')?'deepseek-chat':'gpt-4o-mini');
+  const body={model,messages,stream:false};
+  const r=await fetch(cfg.url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error('API '+r.status+': '+(await r.text()).slice(0,200));
+  const j=await r.json();const msg=j.choices?.[0]?.message||{};
+  return {content:msg.content||'(空回复)',think:msg.reasoning_content||msg.reasoning||''};
+}
+const AI_PRESETS={
+  deepseek:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',hint:'已填入 DeepSeek 官方接口，粘贴你的 Key 即可'},
+  zhipu:{url:'https://open.bigmodel.cn/api/paas/v4/chat/completions',model:'glm-4-flash',hint:'已填入智谱接口（glm-4-flash 免费）'},
+  siliconflow:{url:'https://api.siliconflow.cn/v1/chat/completions',model:'deepseek-ai/DeepSeek-V3',hint:'已填入硅基流动接口'},
+  openai:{url:'https://api.openai.com/v1/chat/completions',model:'gpt-4o-mini',hint:'已填入 OpenAI 接口（国内网络可能需要代理）'}
+};
+function presetAI(p){const c=AI_PRESETS[p];if(!c)return;S.aiCfg.url=c.url;S.aiCfg.model=c.model;save();$('ai-url').value=c.url;$('ai-model').value=c.model;toast(c.hint)}
+async function aiTest(){
+  if(!$('ai-key').value.trim()){$('ai-key').focus();toast('请先粘贴 API Key');return}
+  toast('测试中…');
+  try{const r=await aiCall([{role:'user',content:'请回复：连接成功'}],false);
+    S.aiChat.push({role:'user',content:'🔌 连接测试'});
+    S.aiChat.push({role:'bot',content:'✅ 连接成功，模型回复：'+r.content.slice(0,80)});
+    save();renderChat();toast('连接成功 ✅');
+  }catch(e){toast('连接失败：'+e.message)}
+}
+async function aiSend(){
+  const q=$('ai-input').value.trim();if(!q)return;$('ai-input').value='';
+  S.aiChat.push({role:'user',content:q});renderChat();save();
+  S.aiChat.push({role:'assistant',content:'思考中…'});renderChat();
+  try{const msgs=[{role:'system',content:aiCtx()},...S.aiChat.slice(0,-1).filter(m=>m.content!=='思考中…').map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}))];
+    const res=await aiCall(msgs);S.aiChat[S.aiChat.length-1]=res;save();renderChat();
+  }catch(e){S.aiChat[S.aiChat.length-1]={role:'assistant',content:'❌ '+e.message+'\n请检查 API 地址（需以 /chat/completions 结尾）、Key 和模型名。'}}renderChat();
+}
+async function aiReview(n){
+  const recent=Object.keys(S.days).sort().slice(-n);
+  const q=`请复盘我最近 ${n} 天（${recent[0]||''} 起）的进展与生活状态，并给出建议。`;
+  S.aiChat.push({role:'user',content:q});S.aiChat.push({role:'assistant',content:'思考中…'});renderChat();go('ai');
+  try{const res=await aiCall([{role:'system',content:aiCtx()},{role:'user',content:q}]);S.aiChat[S.aiChat.length-1]=res;save();renderChat();
+  }catch(e){S.aiChat[S.aiChat.length-1]={role:'assistant',content:'❌ '+e.message}}renderChat();
+}
+async function aiMonth(){
+  const mk=`${curY}-${String(curM+1).padStart(2,'0')}`;const m=S.months[mk]||{};
+  const q=`这是我的 ${mk} 月度复盘：目标:${m.goal||'-'}｜已完成:${m.done||'-'}｜未完成:${m.todo||'-'}｜自省:${m.reflect||'-'}｜学到:${m.learn||'-'}。请分析我的本月状态，指出模式与盲点，并给建议。`;
+  S.aiChat.push({role:'user',content:q});S.aiChat.push({role:'assistant',content:'思考中…'});renderChat();go('ai');
+  try{const res=await aiCall([{role:'system',content:aiCtx()},{role:'user',content:q}]);S.aiChat[S.aiChat.length-1]=res;save();renderChat();
+  }catch(e){S.aiChat[S.aiChat.length-1]={role:'assistant',content:'❌ '+e.message}}renderChat();
+}
+async function aiQuarter(){
+  const d=S.quarters[curQ]||{};
+  const q=`我的 Q${curQ} 规划：${d.plan||'-'}。季末反思：进步:${d.win||'-'}｜不足:${d.miss||'-'}。请评估规划质量并给改进建议。`;
+  S.aiChat.push({role:'user',content:q});S.aiChat.push({role:'assistant',content:'思考中…'});renderChat();go('ai');
+  try{const res=await aiCall([{role:'system',content:aiCtx()},{role:'user',content:q}]);S.aiChat[S.aiChat.length-1]=res;save();renderChat();
+  }catch(e){S.aiChat[S.aiChat.length-1]={role:'assistant',content:'❌ '+e.message}}renderChat();
+}
+
+/* ============ 初始化 ============ */
+/* 今日灵感：61 条，按「年-日序号」轮换，每天必换一条 */
+const QUOTES=['放弃的人永远不知道，自己离成功只差一次再试一次。','你不是不行，你只是还没到那一行。坚持写下去。','人生大部分的“不可能”，都死于“再试一次”。','今天做的事可能很小，但今天的坚持会复利。','半途而废的可惜之处：山顶只剩最后一段路。','你不需要一下子变好，你只需要今天比昨天多一点点。','所有让你变强的路，走起来都不舒服——这正常。','如果你觉得累了，说明你在爬坡；躺平的人才不累。','所谓天赋，很多时候只是“别人放弃了你还在做”。','先做完，再做好。完成本身就是一种胜利。','明天的你会感谢今天没有放弃的你。','每天进步 1%，一年后你是最开始时的 37 倍。','别停，停下来才真的输了；慢一点不算输。','你羡慕的那些人，只是比你多熬了几个不想动的夜晚。','目标不是用来仰望的，是用来切碎成今天能做的一件小事的。','情绪低落不是停止的理由，是“降低强度继续”的信号。','习惯的力量：今天不想做，恰恰是最该做的一天。','没有白走的路，每一步都算数。','与其等状态好再开始，不如开始之后状态自然变好。','能坚持下来的人，赢的从来不是聪明，是“再试一天”。','失败只有一种：在成功前停止。','把“我好难”换成“我还在”，你就已经赢过昨天的自己。','低谷不是深渊，是弹簧压到底的那一刻。','你不是没有动力，你是缺一个足够小的第一步。','哪怕今天只做了 5 分钟，也好过完全没做。','坚持的意义：让偶然的闪光变成必然的实力。','别拿 30 天的进度去否定自己 300 天的可能。','慢就是快，急就是停。','真正的高手，是在没人看见的日子里也不放弃的人。','现在的每一分努力，都是在给未来的自己递梯子。','坚持不是硬扛，是学会在低电量模式下也往前挪。','那个让你害怕的大目标，拆到今天就是：只做一件小事。','放弃最贵的代价是：你永远不知道“如果坚持了会怎样”。','改变从难的那天开始，从每天 10 分钟开始。','种一棵树最好的时间是十年前，其次是现在。','你已经在路上了，别在最后一个弯道退赛。','生活不会辜负每一个认真对待它的人——哪怕迟到，不会缺席。','把“坚持”变成系统：固定时间、固定地点、最小动作。','星光不问赶路人，时光不负有心人。','行动是治愈焦虑的良药，等待只会喂养它。','你不需要看到整个楼梯，只需要迈出第一级。——马丁·路德·金','伟大不是一夜造就的，是每天一点点堆出来的。','与其担心失败，不如期待“又排除了一种错误方法”。','任何值得做的事，做得烂也值得做。','掉队一天没关系，回来继续就是了——中断不等于失败。','对比昨天的自己，而不是别人的今天。','环境差不是借口：把今天能控制的 10% 做到，就已经在赢。','你缺的不是时间，是“先开始再说”的勇气。','写下目标的那一刻，你已经比 90% 的人走得远了。','专注当下这一件小事，是普通人逆袭的唯一捷径。','命运的转折点，往往藏在你最想放弃的那一天。','别小看重复：水滴的胜利，就是石头的投降。','既然选择了远方，便只顾风雨兼程。','路虽远，行则将至；事虽难，做则必成。','慢慢来，比较快；别停下，就是赢。','坚持到底的人不是不累，是累的时候也知道自己要去哪。','每天叫醒你的不该是闹钟，是那个还没实现的梦想。','当你在犹豫要不要坚持时，答案就是：要。','记住你开始时的样子——那时候的你，眼里有光。','终点线只是在给“没停下来的人”准备的。','今天是你余生的第一天，别浪费它。'];
+function quoteOfTheDay(){
+  const d=new Date();const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);
+  return QUOTES[(doy+d.getFullYear()*7)%QUOTES.length];
+}
+function updateStreak(){
+  const t=today();const y=k(new Date(Date.now()-864e5));
+  if(S.lastVisit!==t){S.streak=(S.lastVisit===y)?(S.streak||0)+1:1;S.lastVisit=t;save();}
+  if(!S.streak)S.streak=1;
+  const n=S.streak;
+  $('dash-streak').innerHTML=`🔥 连续使用 <b style="color:var(--pri-d)">${n}</b> 天 —— ${n>=7?'你正在建立真正的习惯，别断！':n>=3?'势头很好，今天也别落下。':'万事开头难，你已经开始就是胜利。'}`;
+}
+function initApp(){
+  bindAll();renderGoals();renderQ();renderCal();renderWeek();renderDay();renderDashToday();renderStudy();renderDboxHist();renderChat();
+  $('dash-date').textContent=today();
+  const now=new Date();$('st-week').textContent='W'+Math.ceil((((now-new Date(now.getFullYear(),0,1))/864e5)+new Date(now.getFullYear(),0,1).getDay()+1)/7);
+  $('st-q').textContent='Q'+(Math.floor(now.getMonth()/3)+1);
+  const ev=(S.events[today()]||[]).length;$('st-events').textContent=ev;
+  $('st-goals-bar')||(()=>{const g=$('st-q').closest('.stat');g.innerHTML+=`<div class="k" style="margin-top:6px">目标平均进度</div><div class="progress"><i id="st-goals-bar"></i></div>`})();
+  renderDash();
+  $('dash-quote').textContent='「'+quoteOfTheDay()+'」';
+  updateStreak();
+  if(init&&$('p-'+init))go(init);else go('goals');
+}
+initApp();
+</script>
+</body>
+</html>
