@@ -311,6 +311,16 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);b
         <div class="row" style="margin-top:14px"><button class="btn" onclick="saveMod()">保存</button><span style="flex:1"></span><button class="btn ghost" onclick="closeMod()">取消</button></div>
       </div>
     </div>
+
+    <div class="modal" id="chapter-modal" onclick="if(event.target===this)closeChapter()">
+      <div class="box">
+        <h4 id="chapter-title">添加章节目标</h4>
+        <label class="f">章节名称（如：第一章 存货 / Unit 1）</label><input type="text" id="ch-name" placeholder="章节名称">
+        <label class="f">目标次数（如：刷 3 遍 / 学 5 次，可留空）</label><input type="text" id="ch-target" inputmode="numeric" placeholder="例如 3">
+        <label class="f">备注（可选）</label><input type="text" id="ch-note" placeholder="例如：重点章节，考前必复习">
+        <div class="row" style="margin-top:14px"><button class="btn" onclick="saveChapter()">保存</button><span style="flex:1"></span><button class="btn ghost" onclick="closeChapter()">取消</button></div>
+      </div>
+    </div>
   </section>
 
   <!-- ============ AI 空间 ============ -->
@@ -601,27 +611,56 @@ function renderDashToday(){const dk=today();const tasks=(S.days[dk]?.tasks)||[];
 function addQuick(){const v=$('dash-new').value.trim();if(!v)return;const dk=today();(S.days[dk]=S.days[dk]||{}).tasks=S.days[dk].tasks||[];S.days[dk].tasks.push({text:v,done:false});$('dash-new').value='';save();renderDashToday()}
 
 /* ============ 学习模块 ============ */
-let editMod=-1,openMods={};
+let editMod=-1,openMods={},openChapLogs={},editChapMid=null,editChapIdx=-1;
 function renderStudy(){
   const list=$('mod-list');
   list.innerHTML=S.studyMods.map((m,i)=>{
-    const n=m.logs.length, tgt=m.target||0, pct=tgt?Math.min(100,Math.round(n/tgt*100)):(n?Math.min(100,n*10):0);
+    const chapters=m.chapters||[];
+    const chapTotal=chapters.reduce((s,c)=>s+(c.logs||[]).length,0);
+    const allCount=m.logs.length+chapTotal;
+    const tgt=m.target||0, pct=tgt?Math.min(100,Math.round(allCount/tgt*100)):(allCount?Math.min(100,allCount*10):0);
+    const doneChapters=chapters.filter(c=>c.target&&(c.logs||[]).length>=c.target).length;
     const last=m.logs.length?m.logs[m.logs.length-1].date:'—';
     const open=!!openMods[m.id];
+    const chapHtml=chapters.length?chapters.map((c,ci)=>{
+      const cn=(c.logs||[]).length,ct=+c.target||0,cp=ct?Math.min(100,Math.round(cn/ct*100)):(cn?100:0);
+      const logOpen=!!openChapLogs[c.id];
+      return `<div style="padding:10px 0;border-bottom:1px dashed var(--line)">
+        <div class="row" style="align-items:center;flex-wrap:wrap;gap:6px">
+          <strong style="font-size:13px;flex:1;min-width:120px">📖 ${esc(c.name)}${ct&&cn>=ct?' ✅':''}</strong>
+          <span class="badge" style="background:${cp>=100?'#7fb98a':'var(--lav2)'}">${cn}${ct?'/'+ct+'次':''}</span>
+          <button class="btn sm" onclick="chapCheck(${m.id},${ci})">✓ 打卡</button>
+          <button class="btn sm ghost" onclick="openChapter(${m.id},${ci})">✏️</button>
+          <button class="btn sm danger" onclick="delChapter(${m.id},${ci})">✕</button>
+        </div>
+        <div class="progress" style="margin-top:6px"><i style="width:${cp}%;${cp>=100?'background:#7fb98a':''}"></i></div>
+        ${c.note?`<div class="hint" style="margin-top:4px">${esc(c.note)}</div>`:''}
+        <div class="hint" style="margin-top:4px;cursor:pointer;color:var(--pri-d)" onclick="toggleChapLogs(${c.id})">${logOpen?'▾':'▸'} 打卡记录（${cn}）</div>
+        ${logOpen?`<div style="margin-top:6px;max-height:180px;overflow:auto">${[...(c.logs||[])].reverse().map((l,lj)=>`<div class="ck-item"><div class="t"><span class="badge">${l.date}</span>${esc(l.note||'完成一次')}</div><button class="del" onclick="delChapLog(${m.id},${ci},${(c.logs||[]).length-1-lj})">✕</button></div>`).join('')||'<div class="hint">还没有记录</div>'}</div>`:''}
+      </div>`;
+    }).join(''):'<div class="hint" style="margin-top:6px">还没有章节。点「＋ 添加章节」把大目标拆成具体章节（如第一章、Unit 1），逐章打卡。</div>';
     return `<div class="card" style="border-left:5px solid ${m.color||'var(--pri)'}">
       <div class="row" style="cursor:pointer" onclick="toggleMod(${m.id})">
         <strong style="font-size:15px;flex:1">${open?'📂':'📁'} ${esc(m.name)}</strong>
-        <span class="badge">${n}${tgt?'/'+tgt:''} 次</span>
+        <span class="badge">${allCount}${tgt?'/'+tgt:''} 次</span>
+        ${chapters.length?`<span class="badge" style="background:#f0e6fa">${doneChapters}/${chapters.length} 章完成</span>`:''}
         <span class="badge" style="background:var(--lav2)">最近:${last}</span>
       </div>
       ${m.desc?`<div class="hint" style="margin:8px 0 0">${esc(m.desc)}</div>`:''}
       <div class="progress" style="margin-top:10px"><i style="width:${pct}%"></i></div>
-      <div class="hint">${pct}% 完成</div>
+      <div class="hint">${pct}% 完成${chapters.length?'（含 '+chapters.length+' 个章节）':''}</div>
       ${open?`
-      <div style="margin-top:10px;max-height:260px;overflow:auto">${[...m.logs].reverse().map((l,j)=>`
-        <div class="ck-item"><div class="t"><span class="badge">${l.date}</span>${esc(l.note)}</div><button class="del" onclick="delLog(${m.id},${m.logs.length-1-j})">✕</button></div>`).join('')||'<div class="hint">还没有打卡记录，先打第一次卡吧 📖</div>'}</div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+        <div class="row" style="margin-bottom:6px"><strong style="font-size:14px;flex:1">🎯 章节目标</strong><button class="btn sm" onclick="openChapter(${m.id},-1)">＋ 添加章节</button></div>
+        ${chapHtml}
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+        <strong style="font-size:14px">📝 模块打卡</strong>
+      </div>
+      <div style="margin-top:8px;max-height:220px;overflow:auto">${[...m.logs].reverse().map((l,j)=>`
+        <div class="ck-item"><div class="t"><span class="badge">${l.date}</span>${esc(l.note)}</div><button class="del" onclick="delLog(${m.id},${m.logs.length-1-j})">✕</button></div>`).join('')||'<div class="hint">还没有模块打卡记录</div>'}</div>
       <div class="addrow"><input type="date" id="sd-${m.id}" value="${today()}"><input type="text" id="sn-${m.id}" placeholder="今天学了什么（回车打卡）" onkeydown="if(event.key==='Enter')addLog(${m.id})"><button class="btn sm" onclick="addLog(${m.id})">打卡</button></div>
-      <div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="editModFn(${i})">✏️ 编辑</button><button class="btn sm ghost" onclick="aiStudy(${i})">🤖 AI 分析进度</button><span style="flex:1"></span><button class="btn sm danger" onclick="delMod(${i})">删除模块</button></div>`:''}
+      <div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="editModFn(${i})">✏️ 编辑模块</button><button class="btn sm ghost" onclick="aiStudy(${i})">🤖 AI 分析进度</button><span style="flex:1"></span><button class="btn sm danger" onclick="delMod(${i})">删除模块</button></div>`:''}
     </div>`;
   }).join('')||'<div class="card hint">还没有学习模块。点击上方「＋ 新建学习模块」，为每个目标（如中级会计、英语）建立独立文件夹，分别打卡与追踪进度。</div>';
 }
@@ -643,6 +682,43 @@ function addLog(mid){
 }
 function delLog(mid,j){const m=S.studyMods.find(x=>x.id===mid);m.logs.splice(j,1);save();renderStudy()}
 function delMod(i){const m=S.studyMods[i];if(!confirm(`删除「${m.name}」及其 ${m.logs.length} 条打卡记录？（可在删除前先导出备份）`))return;S.studyMods.splice(i,1);save();renderStudy()}
+
+/* ---- 章节目标 ---- */
+function ensureChapters(m){if(!m.chapters)m.chapters=[];return m.chapters}
+function openChapter(mid,ci){
+  editChapMid=mid;editChapIdx=ci;
+  const m=S.studyMods.find(x=>x.id===mid);const chaps=ensureChapters(m);
+  if(ci>=0){const c=chaps[ci];$('chapter-title').textContent='编辑章节';$('ch-name').value=c.name||'';$('ch-target').value=c.target||'';$('ch-note').value=c.note||''}
+  else{$('chapter-title').textContent='添加章节';$('ch-name').value='';$('ch-target').value='';$('ch-note').value=''}
+  $('chapter-modal').classList.add('on');
+}
+function closeChapter(){$('chapter-modal').classList.remove('on')}
+function saveChapter(){
+  const name=$('ch-name').value.trim();if(!name){toast('请填写章节名称');return}
+  const m=S.studyMods.find(x=>x.id===editChapMid);if(!m)return;const chaps=ensureChapters(m);
+  const data={name,target:+$('ch-target').value||0,note:$('ch-note').value.trim()};
+  if(editChapIdx>=0)Object.assign(chaps[editChapIdx],data);
+  else chaps.push(Object.assign({id:Date.now(),logs:[]},data));
+  save();closeChapter();renderStudy();toast('章节已保存 ✅');
+}
+function delChapter(mid,ci){
+  const m=S.studyMods.find(x=>x.id===mid);const c=(m.chapters||[])[ci];
+  if(!confirm(`删除章节「${c.name}」及其 ${(c.logs||[]).length} 条打卡记录？`))return;
+  m.chapters.splice(ci,1);save();renderStudy();
+}
+function chapCheck(mid,ci){
+  const m=S.studyMods.find(x=>x.id===mid);const c=(m.chapters||[])[ci];if(!c)return;
+  if(!c.logs)c.logs=[];
+  c.logs.push({date:today(),note:''});
+  openChapLogs[c.id]=true;
+  save();renderStudy();
+  const ct=+c.target||0;toast(ct&&c.logs.length>=ct?'🎉 该章节目标达成！':`章节打卡成功（第 ${c.logs.length} 次）`);
+}
+function delChapLog(mid,ci,li){
+  const m=S.studyMods.find(x=>x.id===mid);const c=(m.chapters||[])[ci];if(!c||!c.logs)return;
+  c.logs.splice(li,1);save();renderStudy();
+}
+function toggleChapLogs(cid){openChapLogs[cid]=!openChapLogs[cid];renderStudy()}
 function aiStudy(i){
   const m=S.studyMods[i];const goal=S.sg||'';
   const q=`我的学习模块「${m.name}」目标：${m.desc||'-'}，打卡总目标 ${m.target||'未设'} 次，目前已打卡 ${m.logs.length} 次。最近记录：${[...m.logs].slice(-10).map(l=>`${l.date} ${l.note}`).join('；')||'无'}。年度学习目标：${goal||'-'}。请分析我的学习进度与节奏，并给出建议。`;
@@ -835,7 +911,7 @@ function aiCtx(){
   Object.keys(S.days).sort().slice(-30).forEach(dk=>{const d=S.days[dk];const t=(d.tasks||[]).map(x=>(x.done?'✓':'✗')+x.text).join('；');
     c+=`${dk} 待办:${t||'-'}${d.learn?' 学到:'+d.learn:''}${d.feel?' 感悟:'+d.feel:''}${d.q1?' 三问:'+d.q1:''}\n`});
   c+='\n【月度复盘】\n'+Object.keys(S.months).sort().slice(-3).map(mk=>`${mk} 目标:${S.months[mk].goal||'-'} 已完成:${S.months[mk].done||'-'} 自省:${S.months[mk].reflect||'-'} 学到:${S.months[mk].learn||'-'}`).join('\n');
-  c+='\n【学习模块】\n'+(S.studyMods.map(m=>`- ${m.name}（目标:${m.desc||'-'} 打卡${m.logs.length}/${m.target||'?'}次）近10条:${[...m.logs].slice(-10).map(l=>`${l.date} ${l.note}`).join('；')||'无'}`).join('\n')||'无');
+  c+='\n【学习模块】\n'+(S.studyMods.map(m=>{const ch=(m.chapters||[]).map(x=>`${x.name}(${(x.logs||[]).length}${x.target?'/'+x.target:''})`).join('、')||'无';return `- ${m.name}（目标:${m.desc||'-'} 打卡${m.logs.length}/${m.target||'?'}次）章节:${ch} 近10条:${[...m.logs].slice(-10).map(l=>`${l.date} ${l.note}`).join('；')||'无'}`}).join('\n')||'无');
   c+='\n\n你是用户的生活教练。请：1) 分析TA最近的执行进展与状态（完成率、趋势、精力模式）；2) 指出亮点与问题；3) 给出3条具体可执行的建议（贴合TA的目标）；4) 温暖但有洞察，像专业教练而非鸡汤。中文回答。';
   return c;
 }
