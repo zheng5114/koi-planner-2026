@@ -612,6 +612,27 @@ function addQuick(){const v=$('dash-new').value.trim();if(!v)return;const dk=tod
 
 /* ============ 学习模块 ============ */
 let editMod=-1,openMods={},openChapLogs={},editChapMid=null,editChapIdx=-1;
+
+/* 中级会计三科官方教材目录预置（每章目标 3 次） */
+const PRESET_CHAPTERS={
+  '中级会计':['第一章 总论','第二章 存货','第三章 固定资产','第四章 无形资产','第五章 投资性房地产','第六章 长期股权投资和合营安排','第七章 资产减值','第八章 金融资产和金融负债','第九章 职工薪酬','第十章 股份支付','第十一章 借款费用','第十二章 或有事项','第十三章 收入','第十四章 政府补助','第十五章 非货币性资产交换','第十六章 债务重组','第十七章 所得税','第十八章 外币折算','第十九章 租赁','第二十章 持有待售的非流动资产、处置组和终止经营','第二十一章 企业合并和合并财务报表','第二十二章 会计政策、会计估计变更和差错更正','第二十三章 资产负债表日后事项','第二十四章 政府会计','第二十五章 民间非营利组织会计'],
+  '中级财务管理':['第一章 总论','第二章 财务管理基础','第三章 预算管理','第四章 筹资管理（上）','第五章 筹资管理（下）','第六章 投资管理','第七章 营运资金管理','第八章 成本管理','第九章 收入与分配管理','第十章 财务分析与评价'],
+  '中级经济法':['第一章 总论','第二章 公司法律制度','第三章 合伙企业法律制度','第四章 物权法律制度','第五章 合同法律制度','第六章 金融法律制度','第七章 财政法律制度']
+};
+const CHAP_VER='chapters-20261125';
+function injectPresetChapters(){
+  if(localStorage.getItem('koi-chapter-ver')===CHAP_VER)return;
+  let changed=false;
+  S.studyMods.forEach(m=>{
+    const list=PRESET_CHAPTERS[(m.name||'').trim()];
+    if(list&&(!m.chapters||!m.chapters.length)){
+      m.chapters=list.map((name,i)=>({id:Date.parse('2026-01-01')+i,name,target:3,note:'',logs:[]}));
+      changed=true;
+    }
+  });
+  localStorage.setItem('koi-chapter-ver',CHAP_VER);
+  if(changed)save();
+}
 function renderStudy(){
   const list=$('mod-list');
   list.innerHTML=S.studyMods.map((m,i)=>{
@@ -994,6 +1015,7 @@ function updateStreak(){
   $('dash-streak').innerHTML=`🔥 连续使用 <b style="color:var(--pri-d)">${n}</b> 天 —— ${n>=7?'你正在建立真正的习惯，别断！':n>=3?'势头很好，今天也别落下。':'万事开头难，你已经开始就是胜利。'}`;
 }
 function initApp(){
+  injectPresetChapters();
   bindAll();renderGoals();renderQ();renderCal();renderWeek();renderDay();renderDashToday();renderStudy();renderDboxHist();renderChat();
   $('dash-date').textContent=today();
   const now=new Date();$('st-week').textContent='W'+Math.ceil((((now-new Date(now.getFullYear(),0,1))/864e5)+new Date(now.getFullYear(),0,1).getDay()+1)/7);
