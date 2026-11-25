@@ -349,6 +349,36 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);b
   <!-- ============ 数据 ============ -->
   <section class="page" id="p-data">
     <h2>💾 数据与同步</h2>
+    <div class="card" style="border-color:var(--pri)"><h3>☁️ 云同步（多设备实时互通）</h3>
+      <div class="hint">在 supabase.com 免费注册并新建一个项目 → 左侧 SQL Editor 运行下方建表语句 → 把 Project URL 和 anon / publishable key 填到这里。两台设备填<b>相同的同步码</b>，数据约每 10 秒自动互通一次。</div>
+      <div style="margin-top:10px">
+        <label class="f">Project URL（https://xxxx.supabase.co）</label><input type="text" id="sync-url" placeholder="https://xxxxxxxx.supabase.co">
+        <label class="f">anon / publishable key</label><input type="text" id="sync-key" placeholder="eyJhbGci... 或 sb_publishable_...">
+        <label class="f">同步码（两台设备填一样的，建议用随机串）</label>
+        <div class="row"><input type="text" id="sync-code" placeholder="例如 koi-a7x9k2m"><button class="btn ghost sm" onclick="genSyncCode()">随机生成</button></div>
+      </div>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap">
+        <button class="btn" onclick="syncSaveCfg()">保存配置</button>
+        <button class="btn ghost" onclick="cloudTest()">测试连接</button>
+        <button class="btn ghost" onclick="cloudPull(true)">⬇ 立即下载</button>
+        <button class="btn ghost" onclick="cloudPush()">⬆ 立即上传</button>
+      </div>
+      <label class="row" style="margin-top:10px;align-items:center;gap:8px"><input type="checkbox" id="sync-auto" checked onchange="syncCfg.auto=this.checked;syncSaveCfg()"> 自动同步（每 10 秒，改数据后自动上传）</label>
+      <div class="hint" id="sync-status" style="margin-top:8px">● 未配置</div>
+      <details style="margin-top:10px"><summary style="cursor:pointer;color:var(--pri-d)">① 展开：Supabase 建表 SQL（每个项目只需运行一次）</summary>
+        <textarea id="sync-sql" readonly style="min-height:160px;margin-top:8px;font-size:12px">create table if not exists koi_sync (
+  id text primary key,
+  data jsonb not null,
+  updated_at bigint not null
+);
+alter table koi_sync enable row level security;
+drop policy if exists "koi all" on koi_sync;
+create policy "koi all" on koi_sync
+  for all to anon using (true) with check (true);</textarea>
+        <button class="btn sm" style="margin-top:8px" onclick="copySQL()">复制 SQL</button>
+      </details>
+      <div class="hint" style="margin-top:8px">⚠️ Key 只保存在你自己的设备（localStorage），不会上传到任何第三方；它是公开性质的 key，请配合一个别人猜不到的同步码使用，不要把同步码发给陌生人。</div>
+    </div>
     <div class="card"><h3>📤 导出到苹果日历</h3>
       <div class="hint">导出全部日程为 .ics 文件。iPhone/Mac 上打开文件即可一键加入「日历」App；电脑版日历（Outlook 等）同样支持。之后可在日历中订阅或手动同步。</div>
       <div class="row" style="margin-top:8px"><button class="btn" onclick="exportAllICS()">导出全部日程 (.ics)</button><button class="btn ghost" onclick="exportMonthICS()">仅导出本月</button></div>
@@ -359,9 +389,17 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);b
       <textarea id="notes-out" style="margin-top:10px;min-height:120px" readonly placeholder="生成的文本会出现在这里"></textarea>
     </div>
     <div class="card"><h3>💾 备份与恢复</h3>
-      <div class="row"><button class="btn ghost" onclick="backup()">导出备份 (JSON)</button>
+      <div class="row"><button class="btn ghost" onclick="backup()">导出备份 (JSON 文件)</button>
+      <button class="btn" onclick="copyBackup()">📋 复制备份文本（手机推荐）</button>
       <label class="btn ghost" style="display:inline-block;cursor:pointer">导入备份<input type="file" id="imp" accept=".json" style="display:none" onchange="restore(this)"></label></div>
-      <div class="hint">所有数据保存在本机浏览器（localStorage）。换设备或清理浏览器前请先导出备份。建议每周备份一次。</div>
+      <textarea id="backup-out" style="margin-top:10px;min-height:100px" readonly placeholder="点「复制备份文本」后，全部数据会显示在这里并自动复制——粘贴到备忘录/微信收藏即可永久保存"></textarea>
+      <div class="hint" style="margin-top:8px">📱 手机推荐用「复制备份文本」→ 粘贴到备忘录或发给自己微信，最稳妥；电脑上用「导出 JSON 文件」更方便。导入时点「导入备份」选中之前保存的文本文件即可。</div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+        <label class="f">📥 粘贴文本导入（手机 ↔ 电脑互相同步用）</label>
+        <textarea id="imp-text" style="min-height:100px" placeholder="把另一台设备「复制备份文本」得到的整段内容粘贴到这里，再点下方按钮"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" onclick="restoreText()">从粘贴文本导入</button></div>
+        <div class="hint" style="margin-top:8px">🔄 同步方法：在手机 App 点「📋 复制备份文本」→ 微信发给自己 → 在电脑这里粘贴并点导入；反过来也一样。导入会覆盖本机数据（建议先点「复制备份文本」留存当前数据）。</div>
+      </div>
     </div>
     <div class="card"><h3>📱 添加到主屏幕</h3>
       <div class="hint">iPhone：Safari 打开本页 → 分享按钮 → 「添加到主屏幕」，即可像 App 一样全屏使用。<br>电脑：浏览器菜单 → 安装/创建快捷方式。在线部署后手机电脑数据各自独立，重要数据记得定期备份互通。</div>
@@ -405,13 +443,18 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);b
 <script>
 /* ============ 存储 ============ */
 const LS='koiplanner2026';
+const SEED={"goals":[{"area":"学业/事业","name":"","why":"","kpi":"","q12":"","q34":"","habit":"","progress":0}],"events":{"2026-11-20":[{"text":"吃的","time":"18:52","type":"日程"}]},"days":{"2026-11-20":{"tasks":[{"text":"打印","done":true},{"text":"发邮件","done":true},{"text":"复盘月结","done":true},{"text":"复核资本支出预算","done":true},{"text":"看完金融工具第一节","done":false},{"text":"多邻国","done":true}],"learn":"今天把邮件发送了！以为会收到责备，其实什么也没有！有些牢笼真的是自己给的！不要想太多！然后复盘了工作！开心🥳"},"2026-11-21":{"tasks":[{"text":"安装椅子","done":true},{"text":"金融工具第二节","done":false}]},"2026-11-25":{"tasks":[{"text":"多邻国","done":true},{"text":"金融工具","done":false},{"text":"喝水","done":false}]}},"weeks":{},"quarters":{},"months":{},"swot":{},"dream":{},"aiChat":[{"role":"user","content":"睡不着"},{"content":"看到你凌晨还在，先说一句：这个点了还醒着，不怪你。我们把「睡不着」和你的计划放在一起看，会更有用。\n\n**1. 你的状态，数据其实已经说话了**\n\n- 近30天只有一条记录，5个待办全部未完成，完成率0%。这不是「懒」，更像是一个**启动不了**的状态。\n- 三个中级会计/财管/经济法全是0/520、0/400，英语0/365，事业单位0/520——**所有学习模块都停在起点**。目标定得很满（月薪2万、2027年9月过中级），但行动端是空的。这种「目标大、动作零」的落差，本身就是夜里睡不着的常见来源：大脑在替你焦虑，因为白天没给它一个「开始了」的信号。\n- 昨天那5项待办（打印、发邮件、复盘月结、复核预算、看金融工具第一节）——**它们全是「收尾/硬活」，没有一项是能轻松启动的**。你把最难的事堆在一天，结果一项没动，晚上自然翻来覆去。\n\n**2. 亮点与问题**\n\n亮点：你愿意在深夜打开这个本子，说明你**没有放弃**，还在找突破口。年度愿景里「对生活乐观、有目标」——你是有方向的，只是方向太大，落不到今天。\n\n问题不在能力，在**启动机制**：目标全是「2027年」「月薪2万」这种远期承诺，而每天面对的是「复盘月结、复核预算」这种重活。远期目标给不了今晚的安心，重活又让人想逃——于是拖延→焦虑→失眠，闭环了。\n\n**3. 三条建议（今晚就能用一条）**\n\n1. **今晚先别解决计划，先解决睡觉。** 拿张纸把脑子里转的事全倒出来（明天要发的邮件、要打印的东西），写完告诉自己「已经记下了，明天处理」。大脑肯放手，是因为它确认「不会被忘掉」。别看手机，别在床上复盘KPI。\n2. **明天只做一件「两分钟能启动」的事。** 比如「打开金融工具第一节，看5分钟就停」。你的问题是启动不了，不是做不完。先让打卡从0变成1——**0到1比1到520重要一百倍**。打印、发邮件这种小事，挑一件早上先干掉，给自己一个「今天开始了」的信号。\n3. **把「月薪2万」拆成这周能看见的一步。** 比如这周只锁定「中级会计第一章看完+做10道题」，写进每日待办，且**每天待办不超过3件、其中至少1件是轻的**。重活（复盘、复核预算）单独放一天，别和硬学习挤在一起。\n\n最后一句实话：你不是不够努力，是**把弹药全押在了远方的战场，今天手上却没子弹**。今晚先睡，明天从「5分钟」开始。你已经在记录了，这就是改变的第一步。要不要我帮你把明天的3件待办理出来？","think":""}],"aiCfg":{"url":"https://api.deepseek.com/chat/completions","model":"deepseek-chat","key":"sk-1e87b047360d4850ab2a11ef45220335"},"dbox":[],"study":[],"studyMods":[{"id":1795107670685,"color":"var(--pri)","logs":[],"name":"中级会计","desc":"2027年9月通过中级会计","target":520},{"id":1795107708180,"color":"#e0a458","logs":[],"name":"中级财务管理","desc":"2027年通过中级财务管理","target":520},{"id":1795107736749,"color":"#7fb98a","logs":[],"name":"中级经济法","desc":"2027年9月通过中级经济法","target":400},{"id":1795107762310,"color":"#d97a7a","logs":[{"date":"2026-11-20","note":"听力"},{"date":"2026-11-22","note":"单词"},{"date":"2026-11-21","note":"听力"},{"date":"2026-11-25","note":"单词"}],"name":"英语多邻国","desc":"","target":365},{"id":1795107794931,"color":"#6aa6c9","logs":[],"name":"浙江省事业单位","desc":"","target":520}],"streak":1,"lastVisit":"2026-11-25","vision":"成为月薪2万的人 对生活乐观 有目标"};
+const SEED_VER='seed-20261125';
 let S=JSON.parse(localStorage.getItem(LS)||'{}');
-S=Object.assign({goals:[],events:{},days:{},weeks:{},quarters:{},months:{},swot:{},dream:{},aiChat:[],aiCfg:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',key:'sk-1e87b047360d4850ab2a11ef45220335'},dbox:[],study:[],studyMods:[]},S);
+if(localStorage.getItem('koi-seed-ver')!==SEED_VER){S=JSON.parse(JSON.stringify(SEED));localStorage.setItem('koi-seed-ver',SEED_VER);localStorage.setItem(LS,JSON.stringify(S));}
+S=Object.assign({goals:[],events:{},days:{},weeks:{},quarters:{},months:{},swot:{},dream:{},aiChat:[],aiCfg:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',key:'sk-1e87b047360d4850ab2a11ef45220335'},vision:'',streak:0,lastVisit:'',dbox:[],study:[],studyMods:[]},S);
 if(!S.aiCfg.url)S.aiCfg.url='https://api.deepseek.com/chat/completions';
 if(!S.aiCfg.model)S.aiCfg.model='deepseek-chat';
 if(!S.aiCfg.key)S.aiCfg.key='sk-1e87b047360d4850ab2a11ef45220335';
 if(S.studyMods.length===0&&S.study.length){S.studyMods=[{id:1,name:'默认模块',desc:'（由旧版打卡记录迁移）',target:0,color:'var(--pri)',logs:S.study}];S.study=[];}
-function save(){localStorage.setItem(LS,JSON.stringify(S))}
+function save(){S._ts=Date.now();localStorage.setItem(LS,JSON.stringify(S));schedulePush()}
+let _pushTimer=null,_lastPushTs=0,_syncing=false;
+function schedulePush(){if(!syncCfg.auto||!syncCfg.url||!syncCfg.key||!syncCfg.code)return;clearTimeout(_pushTimer);_pushTimer=setTimeout(()=>cloudPush(),1500)}
 function $(id){return document.getElementById(id)}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200)}
 function k(d){if(typeof d==='string')return d;const x=d;return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
@@ -419,7 +462,7 @@ const today=()=>k(new Date());
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 /* ============ 导航 ============ */
-const PAGES=[['goals','🎯 年度目标'],['quarter','📅 季度'],['week','📐 周计划'],['dash','🏠 今天'],['day','☀️ 每日'],['study','📚 学习'],['month','🗓 月度'],['ai','🤖 AI'],['decide','⬛ 决策黑箱'],['data','💾 数据']];
+const PAGES=[['day','☀️ 每日'],['dash','🏠 今天'],['study','📚 学习'],['ai','🤖 AI'],['week','📐 周计划'],['month','🗓 月度'],['quarter','📅 季度'],['goals','🎯 年度目标'],['decide','⬛ 决策黑箱'],['data','💾 数据']];
 $('nav').innerHTML=PAGES.map(([id,n])=>`<button data-p="${id}" onclick="go('${id}')">${n}</button>`).join('');
 function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));$('p-'+p).classList.add('on');document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));location.hash=p;
   const refresh={week:()=>renderWeek(),month:()=>renderCal(),day:()=>renderDay(),study:()=>renderStudy(),ai:()=>renderChat(),goals:()=>renderGoals(),dash:()=>{renderDashToday();renderDash()}}[p];if(refresh)refresh();}
@@ -639,16 +682,16 @@ function icsFor(keys){
 }
 function dl(name,content,type='text/calendar'){
   const b=new Blob([content],{type});
-  // iOS 添加到主屏幕（standalone 模式）下 a[download] 无效，改用系统分享面板
+  const fallback=()=>{try{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();toast('已下载 '+name+'（见浏览器下载列表）')}catch(e){toast('下载失败，请改用「复制备份文本」')}};
+  // iOS：优先系统分享面板；用户取消或失败则回退到普通下载
   try{
     const f=new File([b],name,{type});
     if(navigator.canShare&&navigator.canShare({files:[f]})){
-      navigator.share({files:[f],title:name}).then(()=>toast('已打开分享，可选「存储到文件」或直接导入日历')).catch(()=>{});
+      navigator.share({files:[f],title:name}).then(()=>toast('已打开分享面板：可「存储到文件」或直接导入日历')).catch(err=>{if(!err||err.name!=='AbortError')fallback()});
       return;
     }
   }catch(e){}
-  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
-  toast('已导出 '+name);
+  fallback();
 }
 function exportAllICS(){dl('koi-2026-all.ics',icsFor(Object.keys(S.events)));showSyncGuide('全部日程')}
 function exportMonthICS(){
@@ -680,8 +723,109 @@ function exportNotes(){const t=buildNotes();$('notes-out').value=t;$('notes-out'
   navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>toast('已复制，去备忘录粘贴 📋')).catch(()=>toast('已生成，请手动复制'));go('data');}
 
 /* ============ 备份 ============ */
-function backup(){dl('koi-backup.json',JSON.stringify(S),'application/json')}
-function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{S=Object.assign(S,JSON.parse(e.target.result));save();location.reload()}catch{toast('文件无效')}};r.readAsText(f)}
+function backup(){
+  const t=JSON.stringify(S);
+  const ta=$('backup-out');
+  if(ta){ta.value=t;ta.select();}
+  dl('koi-backup.json',t,'application/json');
+}
+function copyBackup(){
+  const t=JSON.stringify(S);
+  const ta=$('backup-out');ta.value=t;ta.select();ta.setSelectionRange(0,t.length);
+  let done=false;
+  try{done=document.execCommand&&document.execCommand('copy')}catch(e){}
+  const p=navigator.clipboard&&navigator.clipboard.writeText(t);
+  if(p)p.then(()=>toast('✅ 备份已复制！去备忘录/微信粘贴保存')).catch(()=>toast(done?'✅ 已复制':'请长按文本框手动全选复制'));
+  else toast(done?'✅ 备份已复制':'请长按文本框手动全选复制');
+}
+function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{applyImport(e.target.result)}catch{toast('文件无效')}};r.readAsText(f)}
+function applyImport(txt){
+  const d=JSON.parse(txt);
+  if(!d||typeof d!=='object'||!('goals' in d||'days' in d||'events' in d))throw new Error('不是有效备份');
+  localStorage.setItem(LS,JSON.stringify(d));
+  const cfg=JSON.parse(localStorage.getItem('koi-sync-cfg')||'{}');
+  localStorage.setItem('koi-sync-last',String(d._ts||Date.now()));
+  if(cfg.url&&cfg.key&&cfg.code)sessionStorage.setItem('koi-skip-pull','1');
+  toast('✅ 导入成功，正在刷新…');
+  setTimeout(()=>location.reload(),400);
+}
+function restoreText(){
+  const t=$('imp-text').value.trim();
+  if(!t){toast('请先粘贴备份文本');return}
+  if(!confirm('导入将覆盖本机当前数据，确定继续？'))return;
+  try{applyImport(t)}catch(e){toast('❌ 文本无效：'+e.message)}
+}
+
+/* ============ 云同步（Supabase REST） ============ */
+function copyText(t){
+  let done=false;try{done=document.execCommand&&document.execCommand('copy')}catch(e){}
+  const p=navigator.clipboard&&navigator.clipboard.writeText(t);
+  if(p)p.catch(()=>{});
+  return done;
+}
+let syncCfg=JSON.parse(localStorage.getItem('koi-sync-cfg')||'{}');
+function syncStatus(t){const el=$('sync-status');if(el)el.textContent='● '+t}
+function genSyncCode(){const s='abcdefghjkmnpqrstuvwxyz23456789';let c='koi-';for(let i=0;i<8;i++)c+=s[Math.floor(Math.random()*s.length)];$('sync-code').value=c;syncSaveCfg();toast('已生成同步码，两台设备填这个')}
+function copySQL(){const t=$('sync-sql').value;copyText(t);toast('SQL 已复制，去 Supabase SQL Editor 粘贴运行')}
+function syncSaveCfg(){
+  syncCfg={url:($('sync-url').value||'').trim().replace(/\/$/,''),key:($('sync-key').value||'').trim(),code:($('sync-code').value||'').trim(),auto:$('sync-auto')?$('sync-auto').checked:true};
+  localStorage.setItem('koi-sync-cfg',JSON.stringify(syncCfg));
+  toast('云同步配置已保存');
+  if(syncCfg.url&&syncCfg.key&&syncCfg.code){cloudPull();startAutoSync()}
+}
+function syncFill(){
+  if(!$('sync-url'))return;
+  $('sync-url').value=syncCfg.url||'';$('sync-key').value=syncCfg.key||'';$('sync-code').value=syncCfg.code||'';
+  if($('sync-auto'))$('sync-auto').checked=syncCfg.auto!==false;
+}
+function syncHeaders(){return {'apikey':syncCfg.key,'Authorization':'Bearer '+syncCfg.key,'Content-Type':'application/json','Prefer':'return=minimal'}}
+function syncURL(){return syncCfg.url+'/rest/v1/koi_sync'}
+async function cloudTest(){
+  if(!syncCfg.url||!syncCfg.key){toast('请先填 URL 和 Key 并保存');return}
+  syncStatus('正在测试…');
+  try{
+    const r=await fetch(syncURL()+'?select=id&limit=1',{headers:syncHeaders()});
+    if(r.ok){syncStatus('连接正常 ✓');toast('✓ 连接成功，可以去另一台设备填同样的同步码了')}
+    else{const t=(await r.text()).slice(0,120);syncStatus('连接失败 '+r.status);toast('✗ '+r.status+' '+t)}
+  }catch(e){syncStatus('网络错误');toast('✗ 网络错误：'+e.message+'\n（海外服务在国内可能需要代理）')}
+}
+async function cloudPush(){
+  if(_syncing||!syncCfg.url||!syncCfg.key||!syncCfg.code)return;
+  _syncing=true;
+  try{
+    S._ts=Date.now();_lastPushTs=S._ts;
+    const body={id:syncCfg.code,data:JSON.stringify(S),updated_at:S._ts};
+    const r=await fetch(syncURL(),{method:'POST',headers:{...syncHeaders(),'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
+    if(r.ok){syncStatus('已上传 '+new Date().toLocaleTimeString());localStorage.setItem('koi-sync-last',String(S._ts))}
+    else{syncStatus('上传失败 '+r.status);console.warn('push',r.status,await r.text())}
+  }catch(e){syncStatus('上传网络错误')}finally{_syncing=false}
+}
+async function cloudPull(force){
+  if(!syncCfg.url||!syncCfg.key||!syncCfg.code)return;
+  syncStatus('正在下载…');
+  try{
+    const r=await fetch(syncURL()+'?id=eq.'+encodeURIComponent(syncCfg.code)+'&select=data,updated_at',{headers:syncHeaders()});
+    if(!r.ok){syncStatus('下载失败 '+r.status);return}
+    const rows=await r.json();
+    if(!rows||!rows.length){syncStatus(force?'云端暂无数据，可先「立即上传」':'云端暂无数据');return}
+    const row=rows[0],rts=Number(row.updated_at)||0,lts=Number(localStorage.getItem('koi-sync-last')||S._ts||0);
+    if(force||rts>lts){
+      const remote=JSON.parse(row.data);
+      S=Object.assign(S,remote);S._ts=rts;
+      localStorage.setItem(LS,JSON.stringify(S));localStorage.setItem('koi-sync-last',String(rts));
+      syncStatus('已下载，正在刷新…');
+      // 用会话标记避免 reload 后自动拉取又覆盖本地新数据导致循环
+      sessionStorage.setItem('koi-just-pulled','1');
+      setTimeout(()=>location.reload(),300);
+      return;
+    }else{syncStatus('已是最新 '+new Date().toLocaleTimeString())}
+  }catch(e){syncStatus('下载网络错误');console.warn('pull',e)}
+}
+let _autoTimer=null;
+function startAutoSync(){
+  if(_autoTimer)clearInterval(_autoTimer);
+  _autoTimer=setInterval(()=>{if(!syncCfg.auto||!syncCfg.url||!syncCfg.key||!syncCfg.code)return;cloudPull()},10000);
+}
 
 /* ============ AI ============ */
 function aiCtx(){
@@ -783,7 +927,15 @@ function initApp(){
   renderDash();
   $('dash-quote').textContent='「'+quoteOfTheDay()+'」';
   updateStreak();
-  if(init&&$('p-'+init))go(init);else go('goals');
+  // 云同步初始化
+  syncFill();
+  if(syncCfg.url&&syncCfg.key&&syncCfg.code){
+    if(syncCfg.auto!==false)startAutoSync();
+    if(sessionStorage.getItem('koi-just-pulled')){sessionStorage.removeItem('koi-just-pulled');syncStatus('已同步最新数据 ✓')}
+    else if(sessionStorage.getItem('koi-skip-pull')){sessionStorage.removeItem('koi-skip-pull');syncStatus('已从备份导入，等待自动上传 ✓')}
+    else cloudPull();
+  }
+  if(init&&$('p-'+init))go(init);else go('day');
 }
 initApp();
 </script>
