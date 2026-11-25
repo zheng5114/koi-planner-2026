@@ -298,7 +298,11 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);b
   <!-- ============ 学习计划 ============ -->
   <section class="page" id="p-study">
     <h2>📚 学习计划</h2>
-    <div class="card"><h3>总体学习目标</h3><textarea id="s-goal" placeholder="今年要学什么？考证？技能？语言？"></textarea></div>
+    <div class="card"><h3>📝 待办事项</h3>
+      <div id="sg-todos"></div>
+      <div class="addrow"><input type="text" id="sg-new" placeholder="添加待办（回车确认）" onkeydown="if(event.key==='Enter')addSgTodo()"><button class="btn sm" onclick="addSgTodo()">添加</button></div>
+      <div class="hint" style="margin-top:8px">按 1、2、3… 编号排列，点击序号前的小方框打钩完成，✕ 删除。</div>
+    </div>
     <div class="row" style="margin-bottom:12px"><button class="btn" onclick="openMod()">＋ 新建学习模块</button></div>
     <div id="mod-list"></div>
 
@@ -457,7 +461,11 @@ const SEED={"goals":[{"area":"学业/事业","name":"","why":"","kpi":"","q12":"
 const SEED_VER='seed-20261125';
 let S=JSON.parse(localStorage.getItem(LS)||'{}');
 if(localStorage.getItem('koi-seed-ver')!==SEED_VER){S=JSON.parse(JSON.stringify(SEED));localStorage.setItem('koi-seed-ver',SEED_VER);localStorage.setItem(LS,JSON.stringify(S));}
-S=Object.assign({goals:[],events:{},days:{},weeks:{},quarters:{},months:{},swot:{},dream:{},aiChat:[],aiCfg:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',key:'sk-1e87b047360d4850ab2a11ef45220335'},vision:'',streak:0,lastVisit:'',dbox:[],study:[],studyMods:[]},S);
+S=Object.assign({goals:[],events:{},days:{},weeks:{},quarters:{},months:{},swot:{},dream:{},aiChat:[],aiCfg:{url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',key:'sk-1e87b047360d4850ab2a11ef45220335'},vision:'',streak:0,lastVisit:'',sg:'',sgTodos:[],dbox:[],study:[],studyMods:[]},S);
+// 迁移：旧的「总体学习目标」文本 -> 待办清单（按行拆分）
+if((!S.sgTodos||!S.sgTodos.length)&&S.sg&&S.sg.trim()){
+  S.sgTodos=S.sg.split(/[\n；;]+/).map(x=>x.trim()).filter(Boolean).map(text=>({text,done:false}));
+}
 if(!S.aiCfg.url)S.aiCfg.url='https://api.deepseek.com/chat/completions';
 if(!S.aiCfg.model)S.aiCfg.model='deepseek-chat';
 if(!S.aiCfg.key)S.aiCfg.key='sk-1e87b047360d4850ab2a11ef45220335';
@@ -482,9 +490,9 @@ const init=location.hash.slice(1);
 /* ============ 双向绑定 ============ */
 function bindAll(){
   // simple fields
-  [['g-vision','vision'],['g-model','model'],['s-goal','sg']].forEach(([id,key])=>{
-    if(S[key]!==undefined)$(id).value=S[key];
-    $(id).addEventListener('input',e=>{S[key]=e.target.value;save()});
+  [['g-vision','vision'],['g-model','model']].forEach(([id,key])=>{
+    if(S[key]!==undefined&&$(id))$(id).value=S[key];
+    if($(id))$(id).addEventListener('input',e=>{S[key]=e.target.value;save()});
   });
   // swot
   ['s','w','o','t'].forEach(x=>{const id='swot-'+x;if(S.swot[x])$(id).value=S.swot[x];$(id).addEventListener('input',e=>{S.swot[x]=e.target.value;save()})});
@@ -634,6 +642,7 @@ function injectPresetChapters(){
   if(changed)save();
 }
 function renderStudy(){
+  renderSgTodos();
   const list=$('mod-list');
   list.innerHTML=S.studyMods.map((m,i)=>{
     const chapters=m.chapters||[];
@@ -740,9 +749,29 @@ function delChapLog(mid,ci,li){
   c.logs.splice(li,1);save();renderStudy();
 }
 function toggleChapLogs(cid){openChapLogs[cid]=!openChapLogs[cid];renderStudy()}
+
+/* ---- 待办事项（原总体学习目标） ---- */
+function renderSgTodos(){
+  const box=$('sg-todos');if(!box)return;
+  const todos=S.sgTodos||[];
+  box.innerHTML=todos.map((t,i)=>`<div class="ck-item ${t.done?'done':''}">
+    <span style="font-weight:600;color:var(--pri-d);min-width:20px">${i+1}.</span>
+    <input type="checkbox" ${t.done?'checked':''} onchange="toggleSgTodo(${i})">
+    <div class="t">${esc(t.text)}</div>
+    <button class="del" onclick="delSgTodo(${i})">✕</button>
+  </div>`).join('')||'<div class="hint">还没有待办，在下方输入添加吧 ✍️</div>';
+}
+function addSgTodo(){
+  const inp=$('sg-new');const v=inp.value.trim();if(!v){toast('请输入待办内容');return}
+  if(!S.sgTodos)S.sgTodos=[];
+  S.sgTodos.push({text:v,done:false});inp.value='';save();renderSgTodos();toast('已添加 ✅');
+}
+function toggleSgTodo(i){S.sgTodos[i].done=!S.sgTodos[i].done;save();renderSgTodos()}
+function delSgTodo(i){S.sgTodos.splice(i,1);save();renderSgTodos()}
 function aiStudy(i){
-  const m=S.studyMods[i];const goal=S.sg||'';
-  const q=`我的学习模块「${m.name}」目标：${m.desc||'-'}，打卡总目标 ${m.target||'未设'} 次，目前已打卡 ${m.logs.length} 次。最近记录：${[...m.logs].slice(-10).map(l=>`${l.date} ${l.note}`).join('；')||'无'}。年度学习目标：${goal||'-'}。请分析我的学习进度与节奏，并给出建议。`;
+  const m=S.studyMods[i];
+  const goal=(S.sgTodos||[]).map((t,i)=>`${i+1}.${t.done?'[完成]':''}${t.text}`).join('；');
+  const q=`我的学习模块「${m.name}」目标：${m.desc||'-'}，打卡总目标 ${m.target||'未设'} 次，目前已打卡 ${m.logs.length} 次。最近记录：${[...m.logs].slice(-10).map(l=>`${l.date} ${l.note}`).join('；')||'无'}。待办事项清单：${goal||'-'}。请分析我的学习进度与节奏，并给出建议。`;
   S.aiChat.push({role:'user',content:q});S.aiChat.push({role:'assistant',content:'思考中…'});renderChat();go('ai');
   aiCall([{role:'system',content:aiCtx()},{role:'user',content:q}]).then(res=>{S.aiChat[S.aiChat.length-1]=res;save();renderChat()})
   .catch(e=>{S.aiChat[S.aiChat.length-1]={role:'assistant',content:'❌ '+e.message};renderChat()});
@@ -928,6 +957,7 @@ function startAutoSync(){
 function aiCtx(){
   let c='以下是用户"锦鲤紫2026规划本"的数据：\n【年度愿景】'+(S.vision||'未填写')+'\n【年度目标】\n';
   S.goals.forEach(g=>c+=`- [${g.area}] ${g.name} 进度${g.progress||0}% KPI:${g.kpi||'-'}\n`);
+  c+='\n【待办事项】\n'+((S.sgTodos||[]).map((t,i)=>`${i+1}. ${t.done?'[已完成]':'[未完成]'} ${t.text}`).join('\n')||'无')+'\n';
   c+='\n【近30天每日记录】\n';
   Object.keys(S.days).sort().slice(-30).forEach(dk=>{const d=S.days[dk];const t=(d.tasks||[]).map(x=>(x.done?'✓':'✗')+x.text).join('；');
     c+=`${dk} 待办:${t||'-'}${d.learn?' 学到:'+d.learn:''}${d.feel?' 感悟:'+d.feel:''}${d.q1?' 三问:'+d.q1:''}\n`});
